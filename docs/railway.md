@@ -29,6 +29,12 @@ outside PR environments (`src/lib/seed.ts`), so staging and production are never
 
    Repeat for the other environment (`railway environment <name>` switches the linked one).
 
+   **Postgres version.** Railway's Postgres template defaults to the latest major (18) in the
+   account's default region. Before the first deploy, set the image to
+   `ghcr.io/railwayapp-templates/postgres-ssl:16` and the region to `europe-west4-drams3a`. Once
+   the volume holds data, changing the image tag does not convert it: the service crash-loops, and
+   the only way out is a new volume (or a proper major-version upgrade).
+
 4. **Secrets, per environment.** `.railway/railway.ts` only declares them (`preserve()`); set the
    values once on the `web` service in each environment, with fresh random values per environment
    (`openssl rand -hex 32`): `PAYLOAD_SECRET`, `PREVIEW_SECRET`, `REVALIDATE_SECRET`, `CRON_SECRET`.
