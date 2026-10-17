@@ -1,9 +1,8 @@
 import type { CollectionConfig } from 'payload'
 
-import { adminGroups } from './shared'
+import { admins, nobody } from '@/access'
 
-const isAdmin = ({ req }: { req: { user?: unknown } }) =>
-  Boolean((req.user as { roles?: string[] } | undefined)?.roles?.includes('admin'))
+import { adminGroups } from './shared'
 
 // Proposed and applied AI edits (brief §10.6). Written only by the server through the Local API;
 // owner and compliance read access arrives with the AI editor (M5).
@@ -16,10 +15,10 @@ export const AiChangesets: CollectionConfig = {
     group: adminGroups.system,
   },
   access: {
-    read: isAdmin,
-    create: () => false,
-    update: () => false,
-    delete: () => false,
+    read: admins,
+    create: nobody,
+    update: nobody,
+    delete: nobody,
   },
   fields: [
     { name: 'prompt', type: 'textarea', required: true },

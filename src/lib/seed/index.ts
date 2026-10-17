@@ -27,26 +27,35 @@ export async function runSeed(payload: Payload, env: Env): Promise<void> {
   if (env.SEED_CONTENT !== 'false') await seedContent(payload)
 }
 
+const ROLE_USERS = [
+  { role: 'admin', name: 'Seed Admin' },
+  { role: 'editor', name: 'Seed Editor' },
+  { role: 'compliance', name: 'Seed Compliance' },
+  { role: 'contributor', name: 'Seed Contributor' },
+] as const
+
+/**
+ * One account per role, all with SEED_ADMIN_PASSWORD: the admin at SEED_ADMIN_EMAIL, the others at
+ * <role>@<same domain> (brief §15: "seed one test compliance user"). Only ever on disposable data.
+ */
 async function seedAdminUser(payload: Payload, env: Env): Promise<void> {
-  const email = env.SEED_ADMIN_EMAIL
+  const adminEmail = env.SEED_ADMIN_EMAIL
   const password = env.SEED_ADMIN_PASSWORD
 
-  if (!email || !password) {
-    payload.logger.info(
-      'Seed: SEED_ADMIN_EMAIL / SEED_ADMIN_PASSWORD not set, no admin user created',
-    )
+  if (!adminEmail || !password) {
+    payload.logger.info('Seed: SEED_ADMIN_EMAIL / SEED_ADMIN_PASSWORD not set, no users created')
     return
   }
 
-  const existing = await payload.count({ collection: 'users', where: { email: { equals: email } } })
-  if (existing.totalDocs > 0) {
-    payload.logger.info(`Seed: admin user ${email} already exists`)
-    return
+  const domain = adminEmail.split('@')[1]
+  for (const { role, name } of ROLE_USERS) {
+    const email = role === 'admin' ? adminEmail : `${role}@${domain}`
+    const existing = await payload.count({
+      collection: 'users',
+      where: { email: { equals: email } },
+    })
+    if (existing.totalDocs > 0) continue
+    await payload.create({ collection: 'users', data: { email, password, name, roles: [role] } })
+    payload.logger.info(`Seed: created ${role} user ${email}`)
   }
-
-  await payload.create({
-    collection: 'users',
-    data: { email, password, name: 'Seed Admin', roles: ['admin'] },
-  })
-  payload.logger.info(`Seed: created admin user ${email}`)
 }

@@ -4,6 +4,68 @@ A running log of choices made during the build, newest milestone first. Deviatio
 [`BUILD_BRIEF.md`](BUILD_BRIEF.md) are marked **Deviation** and flagged in the milestone's PR.
 Open items that need an answer from Novare or the agency are marked **Needs decision**.
 
+## M2 — Roles, approval, audit (2026-10-17)
+
+### Role matrix (brief §6.1)
+
+| Action                                                                                | contributor | editor | compliance | admin |
+| ------------------------------------------------------------------------------------- | :---------: | :----: | :--------: | :---: |
+| Read drafts, save drafts                                                              |     yes     |  yes   |    yes     |  yes  |
+| Publish / unpublish ordinary content                                                  |      –      |  yes   |    yes     |  yes  |
+| Publish regulated content (solutions, funds, legal documents, pages marked regulated) |      –      |   –    |    yes     |  yes  |
+| Approve or request changes                                                            |      –      |   –    |    yes     |  yes  |
+| Edit FSP licence numbers and disclaimers                                              |      –      |   –    |    yes     |  yes  |
+| Create or edit legal documents                                                        |      –      |   –    |    yes     |  yes  |
+| Delete ordinary content, media, redirects, forms                                      |      –      |  yes   |    yes     |  yes  |
+| Delete regulated content                                                              |      –      |   –    |    yes     |  yes  |
+| Header, footer, site settings                                                         |      –      |  yes   |    yes     |  yes  |
+| AI settings, users, roles                                                             |      –      |   –    |     –      |  yes  |
+| Read the audit log                                                                    |      –      |   –    |    yes     |  yes  |
+
+1. **Access lives in `src/access/`, applied by `withContentRules`** (`src/collections/shared.ts`) to
+   every content collection, so the rules are written once. A collection's own `access` entries
+   win (legal documents use that to restrict editing to compliance).
+2. **Publishing is checked twice.** The `create`/`update` access functions refuse
+   `_status: 'published'` to roles that may not publish. Payload calls the same functions to
+   decide whether to show the Publish button, so contributors never see it. Because a stale admin
+   tab or an API client can still send it, a `beforeChange` hook (`src/hooks/approvalGuard.ts`)
+   checks again against the stored document, including whether a page is already marked regulated.
+3. **Review state is enforced by the hook, not field access.** Payload strips fields a user may
+   not write before hooks run, which would also hide the attempt. Instead the hook refuses
+   `approved` / `changes_requested` from anyone but compliance and admins, always sets
+   `reviewedBy` / `reviewedAt` itself, sends any edit to content after approval back to `draft`,
+   and records a compliance publish as an approval.
+4. **Submit for review** is a button in the review panel that calls
+   `POST /api/<collection>/<id>/submit-for-review/`. It sets the draft to `in_review` with the
+   caller's own permissions and emails every compliance user (through Payload's email, which logs
+   to the console until Resend is set up in M7).
+5. **Users cannot change their own roles.** Admins create accounts and assign roles. Everyone else
+   may edit only their own name and password.
+6. **Needs decision: 2FA for admin, editor and compliance (§6.1).** Payload 3 has no built-in
+   2FA, and the brief prefers built-ins and official plugins. Default: put `/admin/*` behind
+   Cloudflare Access with MFA in M7, which needs no code and covers every role. The alternative
+   is the community `payload-totp` plugin (TOTP inside Payload). It was not adopted without
+   approval, because it is third-party code on the login path of a regulated site.
+
+### Audit log (brief §6.3)
+
+7. **Every create, update, publish and delete is logged**, on collections and globals, with the
+   user, the source (`human`, or `ai` when the AI editor applies a changeset in M5) and a short
+   summary of which top-level fields changed. Globals are logged as `global:<slug>`. Entries are
+   written with access overridden, and no role can edit or delete them through the API.
+8. **Admin autosaves are not logged.** Autosave writes every few seconds while someone types; the
+   explicit save or publish that follows is logged with the full change.
+9. **Known limitation: unpublishing is logged as `update`.** Payload's hooks cannot tell an
+   unpublish apart from saving a new draft over a published document.
+
+### Revalidation (brief §6.4)
+
+10. **Publishing, unpublishing or deleting revalidates** the document's own URL, its old URL if the
+    slug changed, the listing and home pages that show it (a map per collection in
+    `src/hooks/revalidate.ts`), and `/sitemap.xml`. It also revalidates a cache tag named after
+    the collection, which M3's data fetching will use. Draft saves of unpublished documents do
+    nothing. Globals revalidate the whole site layout. The seed turns revalidation off.
+
 ## M1 — Data model (2026-10-17)
 
 ### Deviations from the brief

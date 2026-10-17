@@ -1,14 +1,11 @@
 import type { CollectionConfig } from 'payload'
 
+import { approvers, nobody } from '@/access'
+
 import { adminGroups } from './shared'
 
-const isAdminOrCompliance = ({ req }: { req: { user?: unknown } }) => {
-  const roles = (req.user as { roles?: string[] } | undefined)?.roles ?? []
-  return roles.includes('admin') || roles.includes('compliance')
-}
-
-// Append-only record of content changes (brief §6.3). Entries are written by hooks (M2) through
-// the Local API; nobody can edit or delete one.
+// Append-only record of content changes (brief §6.3), written by `src/hooks/audit.ts` through the
+// Local API. Nobody can create, edit or delete an entry through the API.
 export const AuditLog: CollectionConfig = {
   slug: 'audit-log',
   labels: { singular: 'Audit entry', plural: 'Audit log' },
@@ -19,10 +16,10 @@ export const AuditLog: CollectionConfig = {
   },
   defaultSort: '-timestamp',
   access: {
-    read: isAdminOrCompliance,
-    create: () => false,
-    update: () => false,
-    delete: () => false,
+    read: approvers,
+    create: nobody,
+    update: nobody,
+    delete: nobody,
   },
   fields: [
     {

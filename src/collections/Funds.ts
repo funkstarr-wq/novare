@@ -1,5 +1,6 @@
 import type { CollectionConfig } from 'payload'
 
+import { approversOnlyField } from '@/access'
 import { seoTab } from '@/fields/seo'
 import { slugField } from '@/fields/slug'
 
@@ -52,7 +53,15 @@ export const Funds: CollectionConfig = {
         },
         {
           label: 'Compliance',
-          fields: [{ name: 'disclaimer', type: 'richText', required: true }],
+          fields: [
+            {
+              name: 'disclaimer',
+              type: 'richText',
+              required: true,
+              access: { create: approversOnlyField, update: approversOnlyField },
+              admin: { description: 'Only compliance and admins can change this.' },
+            },
+          ],
         },
         seoTab,
       ],

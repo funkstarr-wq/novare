@@ -1,11 +1,17 @@
 import type { GlobalConfig } from 'payload'
 
+import { anyone, publishers } from '@/access'
+import { auditGlobalAfterChange } from '@/hooks/audit'
+import { revalidateGlobal } from '@/hooks/revalidate'
+
 import { linkField } from '@/fields/link'
 
 export const Header: GlobalConfig = {
   slug: 'header',
   admin: { group: 'Site' },
-  access: { read: () => true },
+  // Live as soon as saved, so editors and above only.
+  access: { read: anyone, update: publishers },
+  hooks: { afterChange: [auditGlobalAfterChange, revalidateGlobal] },
   fields: [
     {
       name: 'navItems',

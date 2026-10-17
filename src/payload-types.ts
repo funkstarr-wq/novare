@@ -79,9 +79,9 @@ export interface Config {
     categories: Category;
     'press-mentions': PressMention;
     research: Research;
+    'legal-documents': LegalDocument;
     media: Media;
     documents: Document;
-    'legal-documents': LegalDocument;
     users: User;
     'ai-changesets': AiChangeset;
     'audit-log': AuditLog;
@@ -107,9 +107,9 @@ export interface Config {
     categories: CategoriesSelect<false> | CategoriesSelect<true>;
     'press-mentions': PressMentionsSelect<false> | PressMentionsSelect<true>;
     research: ResearchSelect<false> | ResearchSelect<true>;
+    'legal-documents': LegalDocumentsSelect<false> | LegalDocumentsSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
     documents: DocumentsSelect<false> | DocumentsSelect<true>;
-    'legal-documents': LegalDocumentsSelect<false> | LegalDocumentsSelect<true>;
     users: UsersSelect<false> | UsersSelect<true>;
     'ai-changesets': AiChangesetsSelect<false> | AiChangesetsSelect<true>;
     'audit-log': AuditLogSelect<false> | AuditLogSelect<true>;
@@ -224,6 +224,7 @@ export interface Page {
    * Tick if this page describes regulated financial services: publishing it then needs compliance approval.
    */
   regulated?: boolean | null;
+  review?: Review;
   parent?: (number | null) | Page;
   breadcrumbs?:
     | {
@@ -398,7 +399,13 @@ export interface Solution {
         | RelatedLinksBlock
       )[]
     | null;
+  /**
+   * Only compliance and admins can change this.
+   */
   fspLicenceNumber: string;
+  /**
+   * Only compliance and admins can change this.
+   */
   disclaimer: {
     root: {
       type: string;
@@ -434,6 +441,7 @@ export interface Solution {
   generateSlug?: boolean | null;
   slug: string;
   order?: number | null;
+  review?: Review;
   updatedAt: string;
   createdAt: string;
   _status?: ('draft' | 'published') | null;
@@ -697,6 +705,9 @@ export interface Fund {
     [k: string]: unknown;
   } | null;
   awards?: (number | Award)[] | null;
+  /**
+   * Only compliance and admins can change this.
+   */
   disclaimer: {
     root: {
       type: string;
@@ -725,6 +736,7 @@ export interface Fund {
    */
   generateSlug?: boolean | null;
   slug: string;
+  review?: Review;
   updatedAt: string;
   createdAt: string;
   _status?: ('draft' | 'published') | null;
@@ -777,6 +789,53 @@ export interface Award {
   updatedAt: string;
   createdAt: string;
   _status?: ('draft' | 'published') | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "Review".
+ */
+export interface Review {
+  /**
+   * Only compliance can approve or request changes. Any edit after approval returns it to draft.
+   */
+  reviewStatus?: ('draft' | 'in_review' | 'approved' | 'changes_requested') | null;
+  /**
+   * From compliance: what was approved, or what needs changing.
+   */
+  reviewNote?: string | null;
+  reviewedBy?: (number | null) | User;
+  reviewedAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "users".
+ */
+export interface User {
+  id: number;
+  name: string;
+  /**
+   * Admin: everything. Editor: publish non-regulated content. Compliance: also approves and publishes regulated content. Contributor: drafts only.
+   */
+  roles: ('admin' | 'editor' | 'compliance' | 'contributor')[];
+  updatedAt: string;
+  createdAt: string;
+  email: string;
+  resetPasswordToken?: string | null;
+  resetPasswordExpiration?: string | null;
+  salt?: string | null;
+  hash?: string | null;
+  resetPasswordRequestedAt?: string | null;
+  loginAttempts?: number | null;
+  lockUntil?: string | null;
+  sessions?:
+    | {
+        id: string;
+        createdAt?: string | null;
+        expiresAt: string;
+      }[]
+    | null;
+  password?: string | null;
+  collection: 'users';
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1359,6 +1418,7 @@ export interface LegalDocument {
   slug: string;
   versionDate?: string | null;
   owner?: string | null;
+  review?: Review;
   updatedAt: string;
   createdAt: string;
   _status?: ('draft' | 'published') | null;
@@ -1384,37 +1444,6 @@ export interface PressMention {
   updatedAt: string;
   createdAt: string;
   _status?: ('draft' | 'published') | null;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "users".
- */
-export interface User {
-  id: number;
-  name: string;
-  /**
-   * Admin: everything. Editor: publish non-regulated content. Compliance: also approves and publishes regulated content. Contributor: drafts only.
-   */
-  roles: ('admin' | 'editor' | 'compliance' | 'contributor')[];
-  updatedAt: string;
-  createdAt: string;
-  email: string;
-  resetPasswordToken?: string | null;
-  resetPasswordExpiration?: string | null;
-  salt?: string | null;
-  hash?: string | null;
-  resetPasswordRequestedAt?: string | null;
-  loginAttempts?: number | null;
-  lockUntil?: string | null;
-  sessions?:
-    | {
-        id: string;
-        createdAt?: string | null;
-        expiresAt: string;
-      }[]
-    | null;
-  password?: string | null;
-  collection: 'users';
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1637,16 +1666,16 @@ export interface PayloadLockedDocument {
         value: number | Research;
       } | null)
     | ({
+        relationTo: 'legal-documents';
+        value: number | LegalDocument;
+      } | null)
+    | ({
         relationTo: 'media';
         value: number | Media;
       } | null)
     | ({
         relationTo: 'documents';
         value: number | Document;
-      } | null)
-    | ({
-        relationTo: 'legal-documents';
-        value: number | LegalDocument;
       } | null)
     | ({
         relationTo: 'users';
@@ -1762,6 +1791,7 @@ export interface PagesSelect<T extends boolean = true> {
   slug?: T;
   path?: T;
   regulated?: T;
+  review?: T | ReviewSelect<T>;
   parent?: T;
   breadcrumbs?:
     | T
@@ -2022,6 +2052,16 @@ export interface RelatedLinksBlockSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "Review_select".
+ */
+export interface ReviewSelect<T extends boolean = true> {
+  reviewStatus?: T;
+  reviewNote?: T;
+  reviewedBy?: T;
+  reviewedAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "solutions_select".
  */
 export interface SolutionsSelect<T extends boolean = true> {
@@ -2074,6 +2114,7 @@ export interface SolutionsSelect<T extends boolean = true> {
   generateSlug?: T;
   slug?: T;
   order?: T;
+  review?: T | ReviewSelect<T>;
   updatedAt?: T;
   createdAt?: T;
   _status?: T;
@@ -2103,6 +2144,7 @@ export interface FundsSelect<T extends boolean = true> {
       };
   generateSlug?: T;
   slug?: T;
+  review?: T | ReviewSelect<T>;
   updatedAt?: T;
   createdAt?: T;
   _status?: T;
@@ -2328,6 +2370,30 @@ export interface ResearchSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "legal-documents_select".
+ */
+export interface LegalDocumentsSelect<T extends boolean = true> {
+  title?: T;
+  body?: T;
+  file?: T;
+  meta?:
+    | T
+    | {
+        title?: T;
+        image?: T;
+        description?: T;
+      };
+  generateSlug?: T;
+  slug?: T;
+  versionDate?: T;
+  owner?: T;
+  review?: T | ReviewSelect<T>;
+  updatedAt?: T;
+  createdAt?: T;
+  _status?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "media_select".
  */
 export interface MediaSelect<T extends boolean = true> {
@@ -2422,29 +2488,6 @@ export interface DocumentsSelect<T extends boolean = true> {
   height?: T;
   focalX?: T;
   focalY?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "legal-documents_select".
- */
-export interface LegalDocumentsSelect<T extends boolean = true> {
-  title?: T;
-  body?: T;
-  file?: T;
-  meta?:
-    | T
-    | {
-        title?: T;
-        image?: T;
-        description?: T;
-      };
-  generateSlug?: T;
-  slug?: T;
-  versionDate?: T;
-  owner?: T;
-  updatedAt?: T;
-  createdAt?: T;
-  _status?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

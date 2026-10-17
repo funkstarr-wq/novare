@@ -1,5 +1,7 @@
 import type { CollectionBeforeChangeHook, CollectionConfig } from 'payload'
 
+import { admins, adminsOnlyField, adminsOrSelf, isStaff, staff } from '@/access'
+
 import { adminGroups } from './shared'
 
 export const ROLES = ['admin', 'editor', 'compliance', 'contributor'] as const
@@ -21,6 +23,14 @@ export const Users: CollectionConfig = {
     defaultColumns: ['name', 'email', 'roles', 'updatedAt'],
     group: adminGroups.system,
   },
+  access: {
+    // Only people with a role can use the admin panel.
+    admin: ({ req }) => isStaff(req.user),
+    read: staff,
+    create: admins,
+    update: adminsOrSelf,
+    delete: admins,
+  },
   auth: {
     maxLoginAttempts: 5,
     lockTime: 15 * 60 * 1000,
@@ -35,6 +45,8 @@ export const Users: CollectionConfig = {
       required: true,
       defaultValue: ['contributor'],
       saveToJWT: true,
+      // Nobody can grant themselves a role.
+      access: { create: adminsOnlyField, update: adminsOnlyField },
       options: [
         { label: 'Admin', value: 'admin' },
         { label: 'Editor', value: 'editor' },

@@ -12,8 +12,14 @@ const env = {
 describe('runSeed', () => {
   let payload: Payload
 
+  const seededEmails = [
+    env.SEED_ADMIN_EMAIL,
+    'editor@example.test',
+    'compliance@example.test',
+    'contributor@example.test',
+  ]
   const deleteSeedUser = () =>
-    payload.delete({ collection: 'users', where: { email: { equals: env.SEED_ADMIN_EMAIL } } })
+    payload.delete({ collection: 'users', where: { email: { in: seededEmails } } })
 
   beforeAll(async () => {
     payload = await getPayload({ config })
@@ -24,15 +30,21 @@ describe('runSeed', () => {
     await deleteSeedUser()
   })
 
-  it('creates the admin user once, however often it runs', async () => {
+  it('creates one user per role once, however often it runs', async () => {
     await runSeed(payload, env)
     await runSeed(payload, env)
 
-    const users = await payload.count({
+    const users = await payload.find({
       collection: 'users',
-      where: { email: { equals: env.SEED_ADMIN_EMAIL } },
+      where: { email: { in: seededEmails } },
+      depth: 0,
     })
-    expect(users.totalDocs).toBe(1)
+    expect(users.docs.map((user) => [user.email, user.roles]).sort()).toEqual([
+      ['compliance@example.test', ['compliance']],
+      ['contributor@example.test', ['contributor']],
+      ['editor@example.test', ['editor']],
+      ['seed-integration@example.test', ['admin']],
+    ])
   })
 
   it('creates nothing without admin credentials', async () => {

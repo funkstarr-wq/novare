@@ -41,6 +41,8 @@ async function ensure<S extends CollectionSlug>(
     draft: false,
     file,
     overrideAccess: true,
+    // Seeding is not an editorial event: no cache to refresh.
+    context: { disableRevalidate: true },
   } as Parameters<Payload['create']>[0]) as Promise<DataFromCollectionSlug<S>>
 }
 

@@ -25,9 +25,10 @@ import { People } from './collections/People'
 import { PressMentions } from './collections/PressMentions'
 import { Projects } from './collections/Projects'
 import { Research } from './collections/Research'
-import { adminGroups } from './collections/shared'
+import { adminGroups, withContentRules } from './collections/shared'
 import { Solutions } from './collections/Solutions'
 import { Users } from './collections/Users'
+import { admins, anyone, nobody, publishers, staff } from './access'
 import { linkableCollections } from './fields/link'
 import { richTextEditor } from './fields/richText'
 import { AiSettings, Footer, Header, SiteSettings } from './globals'
@@ -47,21 +48,23 @@ export default buildConfig({
     },
   },
   collections: [
-    Pages,
-    Solutions,
-    Funds,
-    Projects,
-    People,
-    Offices,
-    Awards,
-    Jobs,
-    Insights,
-    Categories,
-    PressMentions,
-    Research,
+    ...[
+      Pages,
+      Solutions,
+      Funds,
+      Projects,
+      People,
+      Offices,
+      Awards,
+      Jobs,
+      Insights,
+      Categories,
+      PressMentions,
+      Research,
+      LegalDocuments,
+    ].map(withContentRules),
     Media,
     Documents,
-    LegalDocuments,
     Users,
     AiChangesets,
     AuditLog,
@@ -111,6 +114,8 @@ export default buildConfig({
       redirectTypes: ['301', '302'],
       overrides: {
         admin: { group: adminGroups.site },
+        // Read by the redirect middleware through the Local API; editors manage them (§6.1).
+        access: { read: staff, create: publishers, update: publishers, delete: publishers },
       },
     }),
     formBuilderPlugin({
@@ -128,8 +133,15 @@ export default buildConfig({
         upload: false,
         payment: false,
       },
-      formOverrides: { admin: { group: adminGroups.site } },
-      formSubmissionOverrides: { admin: { group: adminGroups.site } },
+      formOverrides: {
+        admin: { group: adminGroups.site },
+        access: { read: anyone, create: publishers, update: publishers, delete: publishers },
+      },
+      // Submissions hold personal data (POPIA): anyone may send one, few may read them.
+      formSubmissionOverrides: {
+        admin: { group: adminGroups.site },
+        access: { create: anyone, read: publishers, update: nobody, delete: admins },
+      },
     }),
     // Media and documents go to the Railway Bucket when S3_BUCKET is set; local disk otherwise.
     // alwaysInsertFields keeps the schema identical either way, so migrations don't diverge.

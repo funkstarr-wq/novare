@@ -1,5 +1,7 @@
 import type { CollectionConfig } from 'payload'
 
+import { anyone, publishers, staff } from '@/access'
+
 import { adminGroups } from './shared'
 
 export const Documents: CollectionConfig = {
@@ -11,7 +13,10 @@ export const Documents: CollectionConfig = {
     description: 'PDFs and other downloadable files: factsheets, legal documents, reports.',
   },
   access: {
-    read: () => true,
+    read: anyone,
+    create: staff,
+    update: staff,
+    delete: publishers,
   },
   upload: {
     mimeTypes: [

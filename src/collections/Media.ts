@@ -1,5 +1,7 @@
 import type { CollectionConfig } from 'payload'
 
+import { anyone, publishers, staff } from '@/access'
+
 import { adminGroups } from './shared'
 
 // Images. Stored in the Railway bucket when S3 is configured; AVIF/WebP are produced by
@@ -12,7 +14,10 @@ export const Media: CollectionConfig = {
     group: adminGroups.library,
   },
   access: {
-    read: () => true,
+    read: anyone,
+    create: staff,
+    update: staff,
+    delete: publishers,
   },
   upload: {
     mimeTypes: ['image/*'],

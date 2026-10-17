@@ -1,5 +1,6 @@
 import type { CollectionConfig } from 'payload'
 
+import { approversOnlyField } from '@/access'
 import { layoutField } from '@/fields/layout'
 import { seoTab } from '@/fields/seo'
 import { slugField } from '@/fields/slug'
@@ -51,8 +52,21 @@ export const Solutions: CollectionConfig = {
         {
           label: 'Compliance',
           fields: [
-            { name: 'fspLicenceNumber', label: 'FSP licence number', type: 'text', required: true },
-            { name: 'disclaimer', type: 'richText', required: true },
+            {
+              name: 'fspLicenceNumber',
+              label: 'FSP licence number',
+              type: 'text',
+              required: true,
+              access: { create: approversOnlyField, update: approversOnlyField },
+              admin: { description: 'Only compliance and admins can change this.' },
+            },
+            {
+              name: 'disclaimer',
+              type: 'richText',
+              required: true,
+              access: { create: approversOnlyField, update: approversOnlyField },
+              admin: { description: 'Only compliance and admins can change this.' },
+            },
           ],
         },
         {
