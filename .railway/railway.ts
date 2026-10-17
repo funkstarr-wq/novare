@@ -8,7 +8,16 @@
  * Secrets are never written here. `preserve()` keeps the value already set in Railway; set them
  * once per environment with `railway variables --set` as docs/railway.md describes.
  */
-import { bucket, defineRailway, github, postgres, preserve, project, service } from 'railway/iac'
+import {
+  bucket,
+  defineRailway,
+  github,
+  postgres,
+  preserve,
+  project,
+  ref,
+  service,
+} from 'railway/iac'
 
 // EU West (Amsterdam): the closest Railway region to South Africa and Nigeria.
 const REGION = 'europe-west4-drams3a'
@@ -27,8 +36,13 @@ export default defineRailway((ctx) => {
       buildCommand: 'pnpm install --frozen-lockfile && pnpm build',
     },
     deploy: {
-      // `pnpm seed` is a no-op outside PR environments (src/lib/seed.ts).
-      preDeployCommand: ['pnpm payload migrate && pnpm seed'],
+      // Production refuses to deploy while published content still says TODO-CONTENT (brief §14
+      // rule 3). Elsewhere `pnpm seed` runs, and is a no-op outside PR environments.
+      preDeployCommand: [
+        production
+          ? 'pnpm payload migrate && pnpm check:content'
+          : 'pnpm payload migrate && pnpm seed',
+      ],
       startCommand: 'pnpm start',
       // Trailing slash: `trailingSlash: true` 308s `/api/health`, and Railway's healthcheck
       // needs a direct 200.
@@ -42,6 +56,13 @@ export default defineRailway((ctx) => {
       DATABASE_URL: db.env.DATABASE_URL,
       NEXT_PUBLIC_SERVER_URL: 'https://${{RAILWAY_PUBLIC_DOMAIN}}',
       PAYLOAD_DB_PUSH: 'false',
+      PORT: '3000',
+      NEXT_TELEMETRY_DISABLED: '1',
+      S3_BUCKET: ref(media, 'BUCKET'),
+      S3_ENDPOINT: ref(media, 'ENDPOINT'),
+      S3_ACCESS_KEY_ID: ref(media, 'ACCESS_KEY_ID'),
+      S3_SECRET_ACCESS_KEY: ref(media, 'SECRET_ACCESS_KEY'),
+      S3_REGION: ref(media, 'REGION'),
       PAYLOAD_SECRET: preserve(),
       PREVIEW_SECRET: preserve(),
       REVALIDATE_SECRET: preserve(),

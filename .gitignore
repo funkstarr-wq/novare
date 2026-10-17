@@ -14,6 +14,7 @@ next-env.d.ts
 
 # local uploads (Railway Bucket in deployed environments)
 /media
+/documents
 
 # testing
 /coverage/

@@ -1,5 +1,7 @@
 import type { Payload } from 'payload'
 
+import { seedContent } from './content'
+
 type Env = Record<string, string | undefined>
 
 // Railway names ephemeral PR environments `<base>-pr-<number>`.
@@ -22,6 +24,7 @@ export function seedSkipReason(env: Env): string | null {
 /** Idempotent: safe to run on every deploy of a PR environment. */
 export async function runSeed(payload: Payload, env: Env): Promise<void> {
   await seedAdminUser(payload, env)
+  if (env.SEED_CONTENT !== 'false') await seedContent(payload)
 }
 
 async function seedAdminUser(payload: Payload, env: Env): Promise<void> {
@@ -41,6 +44,9 @@ async function seedAdminUser(payload: Payload, env: Env): Promise<void> {
     return
   }
 
-  await payload.create({ collection: 'users', data: { email, password } })
+  await payload.create({
+    collection: 'users',
+    data: { email, password, name: 'Seed Admin', roles: ['admin'] },
+  })
   payload.logger.info(`Seed: created admin user ${email}`)
 }

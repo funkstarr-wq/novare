@@ -4,6 +4,63 @@ A running log of choices made during the build, newest milestone first. Deviatio
 [`BUILD_BRIEF.md`](BUILD_BRIEF.md) are marked **Deviation** and flagged in the milestone's PR.
 Open items that need an answer from Novare or the agency are marked **Needs decision**.
 
+## M1 — Data model (2026-10-17)
+
+### Deviations from the brief
+
+1. **Deviation: office `geo` is two numbers (latitude, longitude), not a `point` field.** Payload's
+   `point` type needs the PostGIS extension, which neither Railway's standard Postgres nor CI's
+   `postgres:16` image provides. Map links and LocalBusiness JSON-LD only need the two numbers.
+2. **Deviation: the SEO field group is named `meta`** (the SEO plugin's own name, shown as an "SEO"
+   tab), not `seo`.
+3. **Deviation: `relatedLinks` holds links (to any page on the site or an external URL), not only
+   links to uploaded documents.** Uploaded files have their own block, `documentDownloads`.
+
+### Data model
+
+4. **Localization is configured, English only, and no field is marked `localized` yet.** Every
+   locale-aware API is in place, but marking fields localized now would put every text field in
+   per-locale tables for a language that may never come. **Needs decision** when a second language
+   is confirmed: which fields to translate. Retrofitting `localized: true` needs a data migration.
+5. **Drafts with autosave and 50 versions apply to every content collection**, including offices,
+   awards, press mentions and categories (the brief asks for "public-facing" ones). Slug and SEO
+   go only to collections with their own URL. Users, media, documents and the system collections
+   have no drafts.
+6. **Regulated collections** (solutions, funds, legal documents) carry `custom.regulated: true`;
+   pages have a `regulated` checkbox. The approval guard and `review` field group arrive in M2.
+7. **Slugs use Payload's built-in `slugField`** (generated from the title until edited or published)
+   with our own slugify: ASCII, lowercase, hyphens only, so "Wealth & Invest" → `wealth-invest`
+   as in the redirect map. A missing slug is filled before collection hooks run, so documents
+   created through the API get correct page paths (the nested-docs breadcrumbs need the slug).
+8. **Pages have a stored, unique `path`** (`/about/history/`, home is `/`), computed from the
+   nested-docs breadcrumbs and updated when a parent moves, so routing (M3) is one indexed lookup.
+9. **Rich text is limited to the AI editor's subset** (§10.4): paragraphs, h2–h4, bold, italic,
+   lists, quotes and links. Insights additionally embed quote, image, chart and callout blocks.
+10. **Links are a shared `link` field**: a label plus either a reference to any document with a URL
+    or an external `https://` URL. No styling options.
+11. **`users`**: `name` and `roles` (admin, editor, compliance, contributor; default contributor).
+    The first account on an empty database becomes admin. The M1 migration gives existing accounts
+    (the staging owner) the admin role and their email as name. 2FA, per-role access and field-level
+    rules are M2.
+12. **`ai-changesets` and `audit-log` exist now but cannot be written through the API**; they are
+    read-only to admins (audit log: admins and compliance). M2 and M5 write to them from the server.
+13. **Media and documents use S3 storage only when `S3_BUCKET` is set**, so local dev and CI keep
+    using local disk. `alwaysInsertFields` keeps the database schema identical either way.
+14. **Login lockout** (5 attempts, 15 minutes) is set on users now, as it's one line of config
+    (§12).
+15. **`funds.minimumInvestment` is text**, so it can be shown exactly as Novare writes it
+    ("R 1 000 000"). `projects.country` is free text until the offices' country list is known.
+
+### Seed and content checks
+
+16. **`pnpm seed` creates development content**: every collection, all 19 blocks, the four §9 enquiry
+    forms and the globals. Names are obviously fake ("Alex Example") and every fact is a
+    `TODO-CONTENT:` placeholder. The five solution names come from the brief's redirect map.
+    Items are created once and never overwritten. `SEED_CONTENT=false` seeds only the admin user.
+17. **`pnpm check:content` fails when published content contains `TODO-CONTENT`** (§14 rule 3). It
+    is production's pre-deploy step in `.railway/railway.ts`, so placeholder copy cannot reach the
+    live site. Drafts are ignored.
+
 ## M0 — Bootstrap (2026-10-17)
 
 ### Deviations from the brief

@@ -1,12 +1,50 @@
-import type { CollectionConfig } from 'payload'
+import type { CollectionBeforeChangeHook, CollectionConfig } from 'payload'
 
-// Roles, 2FA and field-level access arrive in M1/M2 (brief §5.1, §6).
+import { adminGroups } from './shared'
+
+export const ROLES = ['admin', 'editor', 'compliance', 'contributor'] as const
+export type Role = (typeof ROLES)[number]
+
+/** The first account on a fresh database (the admin "create first user" screen) is an admin. */
+export const firstUserIsAdmin: CollectionBeforeChangeHook = async ({ data, operation, req }) => {
+  if (operation !== 'create') return data
+  const { totalDocs } = await req.payload.count({ collection: 'users', req })
+  if (totalDocs === 0) data.roles = ['admin']
+  return data
+}
+
+// Access rules per role, and 2FA for admin/compliance, arrive in M2 (brief §6).
 export const Users: CollectionConfig = {
   slug: 'users',
   admin: {
-    useAsTitle: 'email',
-    defaultColumns: ['email', 'updatedAt'],
+    useAsTitle: 'name',
+    defaultColumns: ['name', 'email', 'roles', 'updatedAt'],
+    group: adminGroups.system,
   },
-  auth: true,
-  fields: [],
+  auth: {
+    maxLoginAttempts: 5,
+    lockTime: 15 * 60 * 1000,
+  },
+  hooks: { beforeChange: [firstUserIsAdmin] },
+  fields: [
+    { name: 'name', type: 'text', required: true },
+    {
+      name: 'roles',
+      type: 'select',
+      hasMany: true,
+      required: true,
+      defaultValue: ['contributor'],
+      saveToJWT: true,
+      options: [
+        { label: 'Admin', value: 'admin' },
+        { label: 'Editor', value: 'editor' },
+        { label: 'Compliance', value: 'compliance' },
+        { label: 'Contributor', value: 'contributor' },
+      ],
+      admin: {
+        description:
+          'Admin: everything. Editor: publish non-regulated content. Compliance: also approves and publishes regulated content. Contributor: drafts only.',
+      },
+    },
+  ],
 }

@@ -10,8 +10,13 @@ with the Railway CLI (5.42.1 or newer), once per environment, and again whenever
 | `staging`       | `staging`     | Base environment for PR environments.                                      |
 | PR environments | the PR branch | Ephemeral copy of `staging`, with its own Postgres. Seeded by `pnpm seed`. |
 
-Every deploy runs `pnpm payload migrate && pnpm seed` before start. `pnpm seed` does nothing
-outside PR environments (`src/lib/seed.ts`), so staging and production are never seeded.
+Every deploy runs migrations before start. Staging and PR environments then run `pnpm seed`, which
+does nothing outside PR environments (`src/lib/seed`). Production instead runs `pnpm check:content`,
+which stops the deploy while any published content still contains `TODO-CONTENT`.
+
+Uploads (media and documents) go to the `media` bucket: the `web` service reads its credentials
+through reference variables (`S3_BUCKET=${{media.BUCKET}}`, `S3_ENDPOINT=${{media.ENDPOINT}}`,
+`S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, `S3_REGION`), so each environment uses its own bucket.
 
 ## First-time setup
 
