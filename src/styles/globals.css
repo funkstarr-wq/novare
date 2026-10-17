@@ -1,0 +1,60 @@
+@import 'tailwindcss';
+
+/*
+ * Neutral placeholder theme (brief §8.1). Components may only use these tokens: the default
+ * Tailwind palette is cleared so a stray `bg-blue-500` fails to style anything. When the brand
+ * design is approved, swap the values here; class names and the data model stay unchanged.
+ */
+@theme {
+  --color-*: initial;
+  --color-white: #ffffff;
+  --color-brand: #1f4e79;
+  --color-brand-strong: #163a5c;
+  --color-on-brand: #ffffff;
+  --color-ink: #1a1d21;
+  --color-ink-muted: #4a5159;
+  --color-surface: #ffffff;
+  --color-surface-muted: #f4f5f7;
+  --color-border: #d7dbe0;
+  --color-focus: #1f4e79;
+  --color-danger: #b42318;
+  --color-success: #067647;
+
+  --font-sans:
+    ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+
+  --text-sm: 0.875rem;
+  --text-sm--line-height: 1.5;
+  --text-base: 1rem;
+  --text-base--line-height: 1.6;
+  --text-lg: 1.125rem;
+  --text-lg--line-height: 1.6;
+  --text-xl: 1.375rem;
+  --text-xl--line-height: 1.4;
+  --text-2xl: 1.75rem;
+  --text-2xl--line-height: 1.3;
+  --text-3xl: 2.25rem;
+  --text-3xl--line-height: 1.2;
+  --text-4xl: 3rem;
+  --text-4xl--line-height: 1.1;
+
+  --radius-sm: 0.25rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 1rem;
+
+  --container-prose: 68ch;
+  --container-page: 80rem;
+}
+
+@layer base {
+  html {
+    color: var(--color-ink);
+    background-color: var(--color-surface);
+    font-family: var(--font-sans);
+  }
+
+  :focus-visible {
+    outline: 3px solid var(--color-focus);
+    outline-offset: 2px;
+  }
+}
