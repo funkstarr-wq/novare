@@ -20,7 +20,8 @@ pnpm lhci                # Lighthouse CI against pnpm start (build first)
 pnpm generate            # payload generate:types + generate:importmap
 pnpm payload migrate:create <name>   # after any schema change
 pnpm payload migrate     # apply migrations
-pnpm seed                # dev seed data (local, CI and Railway PR environments only)
+pnpm seed                # dev content, fake names + TODO-CONTENT (local, CI, PR envs only)
+pnpm check:content       # fail if published content still contains TODO-CONTENT
 ```
 
 Local Postgres: copy `.env.example` to `.env`; create the dev and test databases it names.
@@ -55,3 +56,8 @@ Local Postgres: copy `.env.example` to `.env`; create the dev and test databases
 - `src/app/(payload)/`, `src/payload-types.ts` and `src/migrations/` are generated: regenerate,
   don't hand-edit.
 - Railway config is `.railway/railway.ts` (IaC), applied with the Railway CLI, not read at deploy.
+- A select field named `status` on a collection with drafts collides with Payload's `_status`
+  enum in Postgres: give it its own `enumName`. Avoid `point` fields (they need PostGIS).
+- Migrations are generated, but may be hand-edited for data backfills; mark the edit with a
+  comment. Collections live in `src/collections/`, page sections in `src/blocks/`, shared field
+  builders (slug, link, seo tab, rich text, layout) in `src/fields/`.
