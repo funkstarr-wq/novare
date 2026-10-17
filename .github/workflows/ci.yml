@@ -94,13 +94,15 @@ jobs:
           pnpm build
 
       # e2e, a11y and lighthouse run this exact build, proving it works once a database exists.
+      # Tarred because .next/node_modules holds symlinks into pnpm's store, which upload-artifact
+      # would replace with copies that can no longer resolve their own dependencies.
+      - name: Pack build
+        run: tar --exclude=.next/cache -cf next-build.tar .next
+
       - uses: actions/upload-artifact@v6
         with:
           name: next-build
-          path: |
-            .next/
-            !.next/cache/
-          include-hidden-files: true
+          path: next-build.tar
           retention-days: 3
 
   e2e:
@@ -125,7 +127,9 @@ jobs:
       - uses: actions/download-artifact@v7
         with:
           name: next-build
-          path: .next
+
+      - name: Unpack build
+        run: tar -xf next-build.tar
 
       - name: Apply migrations
         run: pnpm payload migrate
@@ -174,7 +178,9 @@ jobs:
       - uses: actions/download-artifact@v7
         with:
           name: next-build
-          path: .next
+
+      - name: Unpack build
+        run: tar -xf next-build.tar
 
       - name: Apply migrations and seed
         run: |
@@ -214,7 +220,9 @@ jobs:
       - uses: actions/download-artifact@v7
         with:
           name: next-build
-          path: .next
+
+      - name: Unpack build
+        run: tar -xf next-build.tar
 
       - name: Apply migrations and seed
         run: |
