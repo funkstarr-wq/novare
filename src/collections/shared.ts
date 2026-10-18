@@ -1,6 +1,13 @@
 import type { CollectionConfig } from 'payload'
 
-import { approvers, contentWrite, publishedOrStaff, publishers, staff } from '@/access'
+import {
+  approvers,
+  contentWrite,
+  publicOperations,
+  publishedOrStaff,
+  publishers,
+  staff,
+} from '@/access'
 import { submitForReviewEndpoint } from '@/endpoints/submitForReview'
 import { reviewField } from '@/fields/review'
 import { approvalGuard, regulatedPageDeleteGuard } from '@/hooks/approvalGuard'
@@ -38,6 +45,8 @@ export function withContentRules(collection: CollectionConfig): CollectionConfig
 
   return {
     ...collection,
+    // `publishedOrStaff` checks the 2FA code itself, so the public can still read.
+    custom: { ...collection.custom, ...publicOperations('read') },
     access: {
       read: publishedOrStaff,
       readVersions: staff,

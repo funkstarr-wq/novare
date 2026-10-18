@@ -41,11 +41,8 @@ Open items that need an answer from Novare or the agency are marked **Needs deci
    to the console until Resend is set up in M7).
 5. **Users cannot change their own roles.** Admins create accounts and assign roles. Everyone else
    may edit only their own name and password.
-6. **Needs decision: 2FA for admin, editor and compliance (§6.1).** Payload 3 has no built-in
-   2FA, and the brief prefers built-ins and official plugins. Default: put `/admin/*` behind
-   Cloudflare Access with MFA in M7, which needs no code and covers every role. The alternative
-   is the community `payload-totp` plugin (TOTP inside Payload). It was not adopted without
-   approval, because it is third-party code on the login path of a regulated site.
+6. **2FA (§6.1) uses the community `payload-totp` plugin**, chosen by Novare over Cloudflare
+   Access MFA. Payload 3 has no built-in 2FA. Details under "Two-factor authentication" below.
 
 ### Audit log (brief §6.3)
 
@@ -65,6 +62,49 @@ Open items that need an answer from Novare or the agency are marked **Needs deci
     `src/hooks/revalidate.ts`), and `/sitemap.xml`. It also revalidates a cache tag named after
     the collection, which M3's data fetching will use. Draft saves of unpublished documents do
     nothing. Globals revalidate the whole site layout. The seed turns revalidation off.
+
+### Two-factor authentication (brief §6.1)
+
+11. **Deviation: every account must use 2FA, contributors included.** The brief asks for 2FA on
+    admin, editor and compliance accounts; the plugin can only require it for all accounts or
+    none (`forceSetup`). Requiring it everywhere is the stricter reading. After the password,
+    an account without an authenticator app is sent to set one up; until it has done so, and
+    until it enters a code in each session, every API operation is refused (REST, GraphQL and
+    the Local API with `overrideAccess: false`).
+12. **Public reads check the code themselves.** The plugin wraps the access functions of every
+    collection and global and refuses requests without a verified session, which would also
+    block the public site. Operations the public needs opt out with `publicOperations(...)`
+    (content reads, media and documents, header/footer/site settings, forms, form submissions).
+    Content reads use `publicOrVerified`: visitors, and staff who have only entered a password,
+    see published documents; verified staff also see drafts. **Any new public operation must
+    opt out the same way**, or the public site gets 403s.
+13. **`src/proxy.ts` passes the request path to the plugin** as the `x-pathname` request header
+    (Next 16's `proxy` replaces `middleware`), on `/admin/*` only. The plugin's README sets it
+    on the response; its code reads it from the request, so this sets the request header, which
+    also overwrites any value a client sends.
+14. **What the plugin stores.** Each user's TOTP secret is in `users.totp_secret`; no API
+    returns it (field access is closed to everyone). Wrong codes count towards the same
+    lockout as passwords (5 tries, 15 minutes), kept in the plugin's `totp_attempts` table.
+    Only admins can unlock an account. Codes use the plugin's defaults (SHA-1, 6 digits, 30 s,
+    issuer "Novare CMS"), which every authenticator app supports.
+15. **Needs decision: recovery when someone loses their authenticator.** With 2FA required, the
+    plugin offers no way to remove it, in the admin or by API. Until there is a decision, an
+    admin with Railway access clears that user's `totp_secret` in the database, and the user
+    sets up a new app at their next login. Proposal: an admin-only "Reset 2FA" action on the
+    user screen, written to the audit log.
+16. **Tests.** Integration tests pass a verified session (`_strategy: 'totp'`, as the plugin's
+    auth strategy sets it) and also check password-only and enrolled-but-unverified sessions.
+    Playwright's `setup` project signs each seeded role in through the API (password, then
+    setting up or entering a code with `otpauth`) and saves the session for the admin tests.
+    The secrets are throwaway, kept in the git-ignored `playwright/.auth/`. API calls in tests
+    send an `Origin` header, because Payload ignores the session cookie on requests that don't
+    show they come from the site (its CSRF check), and Playwright's API client sends none.
+
+### Fixed along the way
+
+17. **Blank page drafts no longer collide.** Opening "Create new page" autosaves an empty draft,
+    which used to get the path `/undefined/`, so a second blank draft failed the unique `path`
+    index. A page without a slug now has no path until it gets one.
 
 ## M1 — Data model (2026-10-17)
 

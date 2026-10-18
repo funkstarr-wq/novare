@@ -58,6 +58,11 @@ Local Postgres: copy `.env.example` to `.env`; create the dev and test databases
 - Railway config is `.railway/railway.ts` (IaC), applied with the Railway CLI, not read at deploy.
 - A select field named `status` on a collection with drafts collides with Payload's `_status`
   enum in Postgres: give it its own `enumName`. Avoid `point` fields (they need PostGIS).
+- 2FA (payload-totp) wraps every access function and refuses requests without a verified
+  session. A new collection, global or operation the public site needs must opt out with
+  `custom: publicOperations(...)` (`src/access`), or visitors get 403s. Keep the plugin last.
+- Admin e2e tests reuse sessions made by `tests/e2e/auth.setup.ts`; API calls in tests need
+  `headers: sameOrigin(baseURL)`, or Payload ignores the session cookie.
 - Migrations are generated, but may be hand-edited for data backfills; mark the edit with a
   comment. Collections live in `src/collections/`, page sections in `src/blocks/`, shared field
   builders (slug, link, seo tab, rich text, layout) in `src/fields/`.

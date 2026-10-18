@@ -50,7 +50,8 @@ through reference variables (`S3_BUCKET=${{media.BUCKET}}`, `S3_ENDPOINT=${{medi
 6. **PR environments.** Project Settings → Environments: enable PR Environments, set the base
    environment to `staging`, and enable Bot PR Environments if PRs are opened by Claude Code or other
    bots. On `staging`, set `SEED_ADMIN_EMAIL` and a throwaway `SEED_ADMIN_PASSWORD`: PR environments
-   copy them and seed that admin user (staging itself ignores them).
+   copy them and seed that admin user (staging itself ignores them). Every account must set up an
+   authenticator app at its first login (2FA, `docs/decisions.md` M2), seeded ones included.
 7. **Backups.** Postgres service → Backups: enable daily backups in `production` and `staging`.
 8. **Wait for CI.** On the `web` service, turn on Wait for CI so a deploy only starts once the
    GitHub Actions checks for that commit pass.

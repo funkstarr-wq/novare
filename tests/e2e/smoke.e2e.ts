@@ -1,5 +1,7 @@
 import { expect, test } from '@playwright/test'
 
+import { adminEmail, seeded, submitLoginForm, totpCode } from './support/auth'
+
 test.describe('home (placeholder)', () => {
   test('renders one h1 with title and description', async ({ page }) => {
     const response = await page.goto('/')
@@ -36,18 +38,14 @@ test.describe('admin', () => {
     await expect(page.locator('input[name="email"]')).toBeVisible()
   })
 
-  test('lets the seeded admin reach the dashboard', async ({ page }) => {
-    const email = process.env.SEED_ADMIN_EMAIL
-    const password = process.env.SEED_ADMIN_PASSWORD
-    test.skip(
-      !email || !password,
-      'SEED_ADMIN_EMAIL / SEED_ADMIN_PASSWORD not set (run `pnpm seed`)',
-    )
+  test('lets the seeded admin reach the dashboard with password and 2FA code', async ({ page }) => {
+    test.skip(!seeded, 'SEED_ADMIN_EMAIL / SEED_ADMIN_PASSWORD not set (run `pnpm seed`)')
 
-    await page.goto('/admin/login/')
-    await page.locator('#field-email').fill(email!)
-    await page.locator('#field-password').fill(password!)
-    await page.locator('button[type="submit"]').click()
+    // auth.setup.ts has already set up the admin's authenticator.
+    await submitLoginForm(page, adminEmail!)
+    await expect(page).toHaveURL(/\/admin\/verify-totp\/?/)
+    await page.locator('input[maxlength="1"]').first().click()
+    await page.keyboard.type(totpCode(adminEmail!))
 
     await expect(page).toHaveURL(/\/admin\/?$/)
     await expect(page.locator('a[href*="/admin/collections/users"]').first()).toBeVisible()

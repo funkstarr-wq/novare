@@ -1,4 +1,5 @@
 import type { Access, FieldAccess, PayloadRequest, Where } from 'payload'
+import { totpAccess } from 'payload-totp'
 
 import { canApprove, canPublish, hasRole, isStaff, type RoleUser } from './roles'
 
@@ -13,9 +14,31 @@ export const publishers: Access = ({ req }) => canPublish(userOf(req))
 export const approvers: Access = ({ req }) => canApprove(userOf(req))
 export const admins: Access = ({ req }) => hasRole(userOf(req), 'admin')
 
-/** The public sees published documents; staff also see drafts. */
-export const publishedOrStaff: Access = ({ req }) =>
-  isStaff(userOf(req)) || ({ _status: { equals: 'published' } } satisfies Where)
+const published: Access = () => ({ _status: { equals: 'published' } }) satisfies Where
+
+/**
+ * Read access for anything the public site shows. payload-totp refuses every request that lacks
+ * a session verified with a code, so these operations opt out of its wrapper (see
+ * `publicOperations`) and check the code here instead: visitors, and staff who have not entered
+ * their code yet, get `publicAccess`; verified staff get `staffAccess`.
+ */
+export const publicOrVerified =
+  (publicAccess: Access, staffAccess: Access): Access =>
+  async (args) => {
+    if (!args.req.user) return publicAccess(args)
+    return (await totpAccess(staffAccess)(args)) || publicAccess(args)
+  }
+
+/** The public sees published documents; staff (with 2FA) also see drafts. */
+export const publishedOrStaff = publicOrVerified(published, staff)
+
+/**
+ * Marks operations that must work without a login (public reads, form submissions), so
+ * payload-totp leaves their access function alone. Put it in a collection or global's `custom`.
+ */
+export const publicOperations = (...operations: string[]) => ({
+  totp: { disableAccessWrapper: Object.fromEntries(operations.map((op) => [op, true])) },
+})
 
 /**
  * Whether a document counts as regulated (brief §5 [R]): its collection is, or it is a page with

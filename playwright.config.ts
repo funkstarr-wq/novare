@@ -19,9 +19,12 @@ export default defineConfig({
     },
   },
   projects: [
+    // Signs the seeded users in (password + 2FA) once; admin tests reuse the saved sessions.
+    { name: 'setup', testMatch: /auth\.setup\.ts/ },
     {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
+      dependencies: ['setup'],
     },
   ],
   webServer: process.env.PLAYWRIGHT_BASE_URL

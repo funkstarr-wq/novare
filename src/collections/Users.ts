@@ -15,7 +15,7 @@ export const firstUserIsAdmin: CollectionBeforeChangeHook = async ({ data, opera
   return data
 }
 
-// Access rules per role, and 2FA for admin/compliance, arrive in M2 (brief §6).
+// Roles and access per brief §6.1. 2FA comes from payload-totp (src/payload.config.ts).
 export const Users: CollectionConfig = {
   slug: 'users',
   admin: {
@@ -30,6 +30,8 @@ export const Users: CollectionConfig = {
     create: admins,
     update: adminsOrSelf,
     delete: admins,
+    // Lifts a password or 2FA-code lockout; nobody can lift their own.
+    unlock: admins,
   },
   auth: {
     maxLoginAttempts: 5,

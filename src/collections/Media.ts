@@ -1,6 +1,6 @@
 import type { CollectionConfig } from 'payload'
 
-import { anyone, publishers, staff } from '@/access'
+import { anyone, publicOperations, publishers, staff } from '@/access'
 
 import { adminGroups } from './shared'
 
@@ -8,6 +8,8 @@ import { adminGroups } from './shared'
 // next/image at request time, so only width variants are generated here.
 export const Media: CollectionConfig = {
   slug: 'media',
+  // Files are public; payload-totp would otherwise refuse anonymous reads.
+  custom: publicOperations('read'),
   admin: {
     useAsTitle: 'alt',
     defaultColumns: ['filename', 'alt', 'updatedAt'],

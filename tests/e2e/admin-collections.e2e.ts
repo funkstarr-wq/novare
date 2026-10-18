@@ -1,5 +1,7 @@
 import { expect, test } from '@playwright/test'
 
+import { authFile, seeded } from './support/auth'
+
 // M1 "done when": every collection is editable in the admin (brief §13).
 const editable = [
   'pages',
@@ -26,18 +28,9 @@ const readOnly = ['ai-changesets', 'audit-log', 'form-submissions']
 const globals = ['header', 'footer', 'site-settings', 'ai-settings']
 
 test.describe('admin collections', () => {
-  test.skip(
-    !process.env.SEED_ADMIN_EMAIL || !process.env.SEED_ADMIN_PASSWORD,
-    'SEED_ADMIN_EMAIL / SEED_ADMIN_PASSWORD not set (run `pnpm seed`)',
-  )
-
-  test.beforeEach(async ({ page }) => {
-    await page.goto('/admin/login/')
-    await page.locator('#field-email').fill(process.env.SEED_ADMIN_EMAIL!)
-    await page.locator('#field-password').fill(process.env.SEED_ADMIN_PASSWORD!)
-    await page.locator('button[type="submit"]').click()
-    await expect(page).toHaveURL(/\/admin\/?$/)
-  })
+  test.skip(!seeded, 'SEED_ADMIN_EMAIL / SEED_ADMIN_PASSWORD not set (run `pnpm seed`)')
+  // Signed in with password and 2FA by auth.setup.ts.
+  test.use({ storageState: authFile('admin') })
 
   for (const slug of [...editable, ...readOnly]) {
     test(`${slug}: list view loads`, async ({ page }) => {
