@@ -7,7 +7,10 @@ type Props = {
   media: MediaDoc | number | null | undefined
   /** How wide the image renders, for `next/image` to pick a size (brief §8.2). */
   sizes: string
-  /** Only the hero image: it is usually the largest contentful paint. */
+  /**
+   * Only the hero image: it is usually the largest contentful paint, so it loads eagerly at high
+   * priority (Next.js 16 deprecates `priority`; its docs recommend this over `preload`).
+   */
   priority?: boolean
   className?: string
 }
@@ -25,7 +28,8 @@ export function Media({ media, sizes, priority = false, className }: Props) {
       width={width}
       height={height}
       sizes={sizes}
-      priority={priority}
+      loading={priority ? 'eager' : 'lazy'}
+      fetchPriority={priority ? 'high' : undefined}
       className={className}
     />
   )

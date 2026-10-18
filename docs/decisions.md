@@ -78,10 +78,17 @@ Open items that need an answer from Novare or the agency are marked **Needs deci
     for unknown URLs. M3 ships titles and descriptions only, and visible breadcrumbs.
 17. **M7 (hardening):** form spam protection (honeypot, timing, Turnstile), consent logging and
     submission retention. The contact form posts to the form-builder endpoint as it is.
-18. **Performance headroom is thin.** Locally (5 runs, mobile emulation), the median LCP is 1.7–1.8 s
-    against the 2.0 s budget on the home, solution and insight templates; the hero image is now
-    the LCP element. `experimental.inlineCss` was tried and dropped: no LCP gain here, and it put
-    1.3 MB of admin CSS into every admin page's HTML.
+18. **Payload's client-hint headers are limited to the admin** (`next.config.ts`). `withPayload`
+    sends `Critical-CH: Sec-CH-Prefers-Color-Scheme` on every route, for the admin's colour
+    scheme; Critical-CH makes a browser that didn't send the hint repeat the request, which cost
+    every new visitor a round trip. Removing it from public pages cut the median LCP by 150–250 ms
+    (now 1.56–1.67 s locally against the 2.0 s budget, mobile emulation).
+    `experimental.inlineCss` was tried and dropped: no LCP gain, and 1.3 MB of admin CSS in every
+    admin page's HTML. The hero image loads with `loading="eager"` and `fetchPriority="high"`
+    (Next.js 16 deprecates `priority`).
+    **Lighthouse CI measures cached pages:** `scripts/lhci-server.mjs` starts the server and
+    requests each audited page and its images once before the runs, since pages are rendered
+    once after a publish and then served from cache to every visitor.
 19. **Needs decision: Lighthouse on staging (M3 "done when").** Staging has no content (the seed
     only runs in PR environments), so its templates have nothing to render until M6 imports the
     real content. Options: run `pnpm seed` once on staging (fake, clearly marked content, removed
