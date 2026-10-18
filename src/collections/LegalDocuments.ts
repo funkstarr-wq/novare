@@ -1,5 +1,6 @@
 import type { CollectionConfig } from 'payload'
 
+import { approvers } from '@/access'
 import { seoTab } from '@/fields/seo'
 import { slugField } from '@/fields/slug'
 
@@ -14,6 +15,8 @@ export const LegalDocuments: CollectionConfig = {
     description: 'Shown as a page at /legal/<slug>/, with a download link when a file is attached.',
   },
   custom: regulated,
+  // Every field is compliance-only (brief §6.1), so the whole document is.
+  access: { create: approvers, update: approvers },
   versions: draftVersions,
   fields: [
     { name: 'title', type: 'text', required: true },

@@ -1,18 +1,25 @@
 import type { CollectionConfig } from 'payload'
 
+import { anyone, publicOperations, publishers, staff } from '@/access'
+
 import { adminGroups } from './shared'
 
 // Images. Stored in the Railway bucket when S3 is configured; AVIF/WebP are produced by
 // next/image at request time, so only width variants are generated here.
 export const Media: CollectionConfig = {
   slug: 'media',
+  // Files are public; payload-totp would otherwise refuse anonymous reads.
+  custom: publicOperations('read'),
   admin: {
     useAsTitle: 'alt',
     defaultColumns: ['filename', 'alt', 'updatedAt'],
     group: adminGroups.library,
   },
   access: {
-    read: () => true,
+    read: anyone,
+    create: staff,
+    update: staff,
+    delete: publishers,
   },
   upload: {
     mimeTypes: ['image/*'],

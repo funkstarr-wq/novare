@@ -6,6 +6,7 @@ import { seoPlugin } from '@payloadcms/plugin-seo'
 import { s3Storage } from '@payloadcms/storage-s3'
 import path from 'path'
 import { buildConfig } from 'payload'
+import { payloadTotp } from 'payload-totp'
 import sharp from 'sharp'
 import { fileURLToPath } from 'url'
 
@@ -25,9 +26,10 @@ import { People } from './collections/People'
 import { PressMentions } from './collections/PressMentions'
 import { Projects } from './collections/Projects'
 import { Research } from './collections/Research'
-import { adminGroups } from './collections/shared'
+import { adminGroups, withContentRules } from './collections/shared'
 import { Solutions } from './collections/Solutions'
 import { Users } from './collections/Users'
+import { admins, anyone, nobody, publicOperations, publishers, staff } from './access'
 import { linkableCollections } from './fields/link'
 import { richTextEditor } from './fields/richText'
 import { AiSettings, Footer, Header, SiteSettings } from './globals'
@@ -47,21 +49,23 @@ export default buildConfig({
     },
   },
   collections: [
-    Pages,
-    Solutions,
-    Funds,
-    Projects,
-    People,
-    Offices,
-    Awards,
-    Jobs,
-    Insights,
-    Categories,
-    PressMentions,
-    Research,
+    ...[
+      Pages,
+      Solutions,
+      Funds,
+      Projects,
+      People,
+      Offices,
+      Awards,
+      Jobs,
+      Insights,
+      Categories,
+      PressMentions,
+      Research,
+      LegalDocuments,
+    ].map(withContentRules),
     Media,
     Documents,
-    LegalDocuments,
     Users,
     AiChangesets,
     AuditLog,
@@ -111,6 +115,8 @@ export default buildConfig({
       redirectTypes: ['301', '302'],
       overrides: {
         admin: { group: adminGroups.site },
+        // Read by the redirect middleware through the Local API; editors manage them (§6.1).
+        access: { read: staff, create: publishers, update: publishers, delete: publishers },
       },
     }),
     formBuilderPlugin({
@@ -128,8 +134,17 @@ export default buildConfig({
         upload: false,
         payment: false,
       },
-      formOverrides: { admin: { group: adminGroups.site } },
-      formSubmissionOverrides: { admin: { group: adminGroups.site } },
+      formOverrides: {
+        admin: { group: adminGroups.site },
+        access: { read: anyone, create: publishers, update: publishers, delete: publishers },
+        custom: publicOperations('read'),
+      },
+      // Submissions hold personal data (POPIA): anyone may send one, few may read them.
+      formSubmissionOverrides: {
+        admin: { group: adminGroups.site },
+        access: { create: anyone, read: publishers, update: nobody, delete: admins },
+        custom: publicOperations('create'),
+      },
     }),
     // Media and documents go to the Railway Bucket when S3_BUCKET is set; local disk otherwise.
     // alwaysInsertFields keeps the schema identical either way, so migrations don't diverge.
@@ -147,6 +162,14 @@ export default buildConfig({
           secretAccessKey: process.env.S3_SECRET_ACCESS_KEY || '',
         },
       },
+    }),
+    // 2FA (brief §6.1): every account must set up an authenticator app before it can do anything.
+    // It wraps the access functions of everything registered before it, so it stays last; public
+    // operations opt out with `publicOperations` and check the code themselves (`src/access`).
+    payloadTotp({
+      collection: 'users',
+      forceSetup: true,
+      totp: { issuer: 'Novare CMS' },
     }),
   ],
 })

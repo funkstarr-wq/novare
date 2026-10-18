@@ -1,5 +1,7 @@
 import type { CollectionBeforeChangeHook, CollectionConfig } from 'payload'
 
+import { admins, adminsOnlyField, adminsOrSelf, isStaff, staff } from '@/access'
+
 import { adminGroups } from './shared'
 
 export const ROLES = ['admin', 'editor', 'compliance', 'contributor'] as const
@@ -13,13 +15,23 @@ export const firstUserIsAdmin: CollectionBeforeChangeHook = async ({ data, opera
   return data
 }
 
-// Access rules per role, and 2FA for admin/compliance, arrive in M2 (brief §6).
+// Roles and access per brief §6.1. 2FA comes from payload-totp (src/payload.config.ts).
 export const Users: CollectionConfig = {
   slug: 'users',
   admin: {
     useAsTitle: 'name',
     defaultColumns: ['name', 'email', 'roles', 'updatedAt'],
     group: adminGroups.system,
+  },
+  access: {
+    // Only people with a role can use the admin panel.
+    admin: ({ req }) => isStaff(req.user),
+    read: staff,
+    create: admins,
+    update: adminsOrSelf,
+    delete: admins,
+    // Lifts a password or 2FA-code lockout; nobody can lift their own.
+    unlock: admins,
   },
   auth: {
     maxLoginAttempts: 5,
@@ -35,6 +47,8 @@ export const Users: CollectionConfig = {
       required: true,
       defaultValue: ['contributor'],
       saveToJWT: true,
+      // Nobody can grant themselves a role.
+      access: { create: adminsOnlyField, update: adminsOnlyField },
       options: [
         { label: 'Admin', value: 'admin' },
         { label: 'Editor', value: 'editor' },

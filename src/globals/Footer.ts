@@ -1,11 +1,18 @@
 import type { GlobalConfig } from 'payload'
 
+import { anyone, publicOperations, publishers } from '@/access'
+import { auditGlobalAfterChange } from '@/hooks/audit'
+import { revalidateGlobal } from '@/hooks/revalidate'
+
 import { linkField } from '@/fields/link'
 
 export const Footer: GlobalConfig = {
   slug: 'footer',
   admin: { group: 'Site' },
-  access: { read: () => true },
+  // Live as soon as saved, so editors and above only.
+  access: { read: anyone, update: publishers },
+  custom: publicOperations('read'),
+  hooks: { afterChange: [auditGlobalAfterChange, revalidateGlobal] },
   fields: [
     {
       name: 'columns',

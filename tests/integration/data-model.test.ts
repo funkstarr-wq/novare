@@ -116,6 +116,17 @@ describe('page paths', () => {
     await payload.delete({ collection: 'pages', id: parent.id })
   })
 
+  it('gives blank drafts no path, so several can exist at once', async () => {
+    // What the admin's autosave creates when someone opens "Create new page".
+    const blank = () => payload.create({ collection: 'pages', data: {} as never, draft: true })
+    const [first, second] = [await blank(), await blank()]
+    expect(first.path ?? null).toBeNull()
+    expect(second.path ?? null).toBeNull()
+
+    await payload.delete({ collection: 'pages', id: first.id })
+    await payload.delete({ collection: 'pages', id: second.id })
+  })
+
   it('maps the top-level home page to /', async () => {
     const home = await payload.find({ collection: 'pages', where: { slug: { equals: 'home' } } })
     expect(home.docs[0]?.path).toBe('/')

@@ -1,13 +1,15 @@
-import type { FieldAccess, GlobalConfig } from 'payload'
+import type { GlobalConfig } from 'payload'
 
-const isAdmin: FieldAccess = ({ req }) =>
-  Boolean((req.user as { roles?: string[] } | null | undefined)?.roles?.includes('admin'))
+import { admins, adminsOnlyField, staff } from '@/access'
+import { auditGlobalAfterChange } from '@/hooks/audit'
 
-// AI editor settings (brief §5.2, §10). Global-level access is tightened with the roles in M2.
+// AI editor settings (brief §5.2, §10): staff can see them, only admins change them.
 export const AiSettings: GlobalConfig = {
   slug: 'ai-settings',
   label: 'AI settings',
   admin: { group: 'System' },
+  access: { read: staff, update: admins },
+  hooks: { afterChange: [auditGlobalAfterChange] },
   fields: [
     { name: 'enabled', type: 'checkbox', defaultValue: false },
     {
@@ -48,7 +50,7 @@ export const AiSettings: GlobalConfig = {
     {
       name: 'systemPromptAddendum',
       type: 'textarea',
-      access: { read: isAdmin, update: isAdmin },
+      access: { read: adminsOnlyField, update: adminsOnlyField },
       admin: { description: 'Admin only. Appended to the AI editor system prompt.' },
     },
   ],

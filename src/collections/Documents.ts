@@ -1,9 +1,13 @@
 import type { CollectionConfig } from 'payload'
 
+import { anyone, publicOperations, publishers, staff } from '@/access'
+
 import { adminGroups } from './shared'
 
 export const Documents: CollectionConfig = {
   slug: 'documents',
+  // Files are public; payload-totp would otherwise refuse anonymous reads.
+  custom: publicOperations('read'),
   admin: {
     useAsTitle: 'title',
     defaultColumns: ['title', 'type', 'versionDate', 'updatedAt'],
@@ -11,7 +15,10 @@ export const Documents: CollectionConfig = {
     description: 'PDFs and other downloadable files: factsheets, legal documents, reports.',
   },
   access: {
-    read: () => true,
+    read: anyone,
+    create: staff,
+    update: staff,
+    delete: publishers,
   },
   upload: {
     mimeTypes: [
