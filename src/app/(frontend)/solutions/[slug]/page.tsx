@@ -1,7 +1,6 @@
 import type { Metadata } from 'next'
 import { draftMode } from 'next/headers'
 import NextLink from 'next/link'
-import { notFound } from 'next/navigation'
 
 import { Breadcrumbs } from '@/components/Breadcrumbs'
 import { PageHeader } from '@/components/PageHeader'
@@ -13,6 +12,11 @@ import { hubCrumbs } from '@/lib/crumbs'
 import { populated } from '@/lib/format'
 import { getBySlug, listFunds, listProjects } from '@/lib/queries'
 import { pathFor } from '@/lib/urls'
+import { routeMetadata } from '@/lib/metadata'
+import { redirectOrNotFound } from '@/lib/redirects'
+import { JsonLd } from '@/components/JsonLd'
+import * as jsonld from '@/lib/jsonld'
+import { faqOf } from '@/lib/faq'
 
 type Props = { params: Promise<{ slug: string }> }
 
@@ -24,10 +28,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { isEnabled: draft } = await draftMode()
   const solution = await getBySlug(draft, 'solutions', (await params).slug)
   if (!solution) return {}
-  return {
-    title: solution.meta?.title || solution.title,
-    description: solution.meta?.description ?? solution.summary ?? undefined,
-  }
+  return routeMetadata(draft, {
+    title: solution.title,
+    path: pathFor('solutions', solution)!,
+    meta: solution.meta,
+    description: solution.summary,
+    image: solution.heroImage,
+  })
 }
 
 // Real-estate projects live under this solution's URL (brief §7).
@@ -35,8 +42,9 @@ const REAL_ESTATE = 'real-estate'
 
 export default async function SolutionPage({ params }: Props) {
   const { isEnabled: draft } = await draftMode()
-  const solution = await getBySlug(draft, 'solutions', (await params).slug)
-  if (!solution) notFound()
+  const { slug } = await params
+  const solution = await getBySlug(draft, 'solutions', slug)
+  if (!solution) return redirectOrNotFound(`/solutions/${slug}/`)
   const [funds, projects] = await Promise.all([
     listFunds(draft, solution.id),
     solution.slug === REAL_ESTATE ? listProjects(draft) : Promise.resolve([]),
@@ -50,6 +58,7 @@ export default async function SolutionPage({ params }: Props) {
 
   return (
     <>
+      <JsonLd data={[jsonld.financialService(solution), faqOf(solution.layout)]} />
       <Breadcrumbs items={crumbs} />
       <PageHeader title={solution.title} intro={solution.summary} image={solution.heroImage}>
         {solution.externalUrl && (

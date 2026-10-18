@@ -1,6 +1,5 @@
 import type { Metadata } from 'next'
 import { draftMode } from 'next/headers'
-import { notFound } from 'next/navigation'
 
 import { Breadcrumbs } from '@/components/Breadcrumbs'
 import { Media } from '@/components/Media'
@@ -9,6 +8,10 @@ import { hubCrumbs } from '@/lib/crumbs'
 import { populated } from '@/lib/format'
 import { getBySlug } from '@/lib/queries'
 import { pathFor } from '@/lib/urls'
+import { routeMetadata } from '@/lib/metadata'
+import { redirectOrNotFound } from '@/lib/redirects'
+import { JsonLd } from '@/components/JsonLd'
+import * as jsonld from '@/lib/jsonld'
 
 type Props = { params: Promise<{ slug: string }> }
 
@@ -20,16 +23,21 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { isEnabled: draft } = await draftMode()
   const person = await getBySlug(draft, 'people', (await params).slug)
   if (!person) return {}
-  return {
-    title: person.meta?.title || person.name,
-    description: person.meta?.description ?? person.role ?? undefined,
-  }
+  return routeMetadata(draft, {
+    title: person.name,
+    path: pathFor('people', person)!,
+    meta: person.meta,
+    description: person.role,
+    image: person.photo,
+    type: 'profile',
+  })
 }
 
 export default async function PersonPage({ params }: Props) {
   const { isEnabled: draft } = await draftMode()
-  const person = await getBySlug(draft, 'people', (await params).slug)
-  if (!person) notFound()
+  const { slug } = await params
+  const person = await getBySlug(draft, 'people', slug)
+  if (!person) return redirectOrNotFound(`/about/leadership/${slug}/`)
   const division = populated(person.division)
   const crumbs = await hubCrumbs(
     draft,
@@ -41,6 +49,7 @@ export default async function PersonPage({ params }: Props) {
   )
   return (
     <>
+      <JsonLd data={[jsonld.person(person)]} />
       <Breadcrumbs items={crumbs} />
       <article className="mx-auto grid max-w-(--container-page) gap-8 px-6 py-10 md:grid-cols-[1fr_2fr]">
         <Media

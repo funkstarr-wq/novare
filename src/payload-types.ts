@@ -212,6 +212,10 @@ export interface Page {
      */
     image?: (number | null) | Media;
     description?: string | null;
+    /**
+     * Adds noindex and leaves the page out of the sitemap. Visitors can still open it.
+     */
+    noindex?: boolean | null;
   };
   /**
    * When enabled, the slug will auto-generate from the title field on save and autosave.
@@ -436,6 +440,10 @@ export interface Solution {
      */
     image?: (number | null) | Media;
     description?: string | null;
+    /**
+     * Adds noindex and leaves the page out of the sitemap. Visitors can still open it.
+     */
+    noindex?: boolean | null;
   };
   /**
    * When enabled, the slug will auto-generate from the title field on save and autosave.
@@ -654,6 +662,10 @@ export interface Category {
      */
     image?: (number | null) | Media;
     description?: string | null;
+    /**
+     * Adds noindex and leaves the page out of the sitemap. Visitors can still open it.
+     */
+    noindex?: boolean | null;
   };
   /**
    * When enabled, the slug will auto-generate from the title field on save and autosave.
@@ -732,6 +744,10 @@ export interface Fund {
      */
     image?: (number | null) | Media;
     description?: string | null;
+    /**
+     * Adds noindex and leaves the page out of the sitemap. Visitors can still open it.
+     */
+    noindex?: boolean | null;
   };
   /**
    * When enabled, the slug will auto-generate from the title field on save and autosave.
@@ -899,6 +915,10 @@ export interface Person {
      */
     image?: (number | null) | Media;
     description?: string | null;
+    /**
+     * Adds noindex and leaves the page out of the sitemap. Visitors can still open it.
+     */
+    noindex?: boolean | null;
   };
   /**
    * When enabled, the slug will auto-generate from the title field on save and autosave.
@@ -1184,6 +1204,10 @@ export interface Project {
      */
     image?: (number | null) | Media;
     description?: string | null;
+    /**
+     * Adds noindex and leaves the page out of the sitemap. Visitors can still open it.
+     */
+    noindex?: boolean | null;
   };
   /**
    * When enabled, the slug will auto-generate from the title field on save and autosave.
@@ -1228,6 +1252,10 @@ export interface Insight {
      */
     image?: (number | null) | Media;
     description?: string | null;
+    /**
+     * Adds noindex and leaves the page out of the sitemap. Visitors can still open it.
+     */
+    noindex?: boolean | null;
   };
   /**
    * When enabled, the slug will auto-generate from the title field on save and autosave.
@@ -1280,6 +1308,10 @@ export interface Research {
      */
     image?: (number | null) | Media;
     description?: string | null;
+    /**
+     * Adds noindex and leaves the page out of the sitemap. Visitors can still open it.
+     */
+    noindex?: boolean | null;
   };
   /**
    * When enabled, the slug will auto-generate from the title field on save and autosave.
@@ -1328,6 +1360,10 @@ export interface Job {
      */
     image?: (number | null) | Media;
     description?: string | null;
+    /**
+     * Adds noindex and leaves the page out of the sitemap. Visitors can still open it.
+     */
+    noindex?: boolean | null;
   };
   /**
    * When enabled, the slug will auto-generate from the title field on save and autosave.
@@ -1414,6 +1450,10 @@ export interface LegalDocument {
      */
     image?: (number | null) | Media;
     description?: string | null;
+    /**
+     * Adds noindex and leaves the page out of the sitemap. Visitors can still open it.
+     */
+    noindex?: boolean | null;
   };
   /**
    * When enabled, the slug will auto-generate from the title field on save and autosave.
@@ -1799,6 +1839,7 @@ export interface PagesSelect<T extends boolean = true> {
         title?: T;
         image?: T;
         description?: T;
+        noindex?: T;
       };
   generateSlug?: T;
   slug?: T;
@@ -2123,6 +2164,7 @@ export interface SolutionsSelect<T extends boolean = true> {
         title?: T;
         image?: T;
         description?: T;
+        noindex?: T;
       };
   generateSlug?: T;
   slug?: T;
@@ -2154,6 +2196,7 @@ export interface FundsSelect<T extends boolean = true> {
         title?: T;
         image?: T;
         description?: T;
+        noindex?: T;
       };
   generateSlug?: T;
   slug?: T;
@@ -2182,6 +2225,7 @@ export interface ProjectsSelect<T extends boolean = true> {
         title?: T;
         image?: T;
         description?: T;
+        noindex?: T;
       };
   generateSlug?: T;
   slug?: T;
@@ -2206,6 +2250,7 @@ export interface PeopleSelect<T extends boolean = true> {
         title?: T;
         image?: T;
         description?: T;
+        noindex?: T;
       };
   generateSlug?: T;
   slug?: T;
@@ -2283,6 +2328,7 @@ export interface JobsSelect<T extends boolean = true> {
         title?: T;
         image?: T;
         description?: T;
+        noindex?: T;
       };
   generateSlug?: T;
   slug?: T;
@@ -2306,6 +2352,7 @@ export interface InsightsSelect<T extends boolean = true> {
         title?: T;
         image?: T;
         description?: T;
+        noindex?: T;
       };
   generateSlug?: T;
   slug?: T;
@@ -2329,6 +2376,7 @@ export interface CategoriesSelect<T extends boolean = true> {
         title?: T;
         image?: T;
         description?: T;
+        noindex?: T;
       };
   generateSlug?: T;
   slug?: T;
@@ -2373,6 +2421,7 @@ export interface ResearchSelect<T extends boolean = true> {
         title?: T;
         image?: T;
         description?: T;
+        noindex?: T;
       };
   generateSlug?: T;
   slug?: T;
@@ -2395,6 +2444,7 @@ export interface LegalDocumentsSelect<T extends boolean = true> {
         title?: T;
         image?: T;
         description?: T;
+        noindex?: T;
       };
   generateSlug?: T;
   slug?: T;

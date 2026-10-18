@@ -1,6 +1,5 @@
 import type { Metadata } from 'next'
 import { draftMode } from 'next/headers'
-import { notFound } from 'next/navigation'
 
 import { Breadcrumbs } from '@/components/Breadcrumbs'
 import { InsightCard } from '@/components/cards/InsightCard'
@@ -9,6 +8,8 @@ import { Section } from '@/components/Section'
 import { hubCrumbs } from '@/lib/crumbs'
 import { getBySlug, listInsights } from '@/lib/queries'
 import { pathFor } from '@/lib/urls'
+import { routeMetadata } from '@/lib/metadata'
+import { redirectOrNotFound } from '@/lib/redirects'
 
 type Props = { params: Promise<{ slug: string }> }
 
@@ -20,10 +21,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { isEnabled: draft } = await draftMode()
   const category = await getBySlug(draft, 'categories', (await params).slug)
   if (!category) return {}
-  return {
-    title: category.meta?.title || category.title,
-    description: category.meta?.description ?? category.description ?? undefined,
-  }
+  return routeMetadata(draft, {
+    title: category.title,
+    path: pathFor('categories', category)!,
+    meta: category.meta,
+    description: category.description,
+  })
 }
 
 // The latest insights in the category; the full archive is the paginated /insights/ listing.
@@ -31,8 +34,9 @@ const CATEGORY_LIMIT = 48
 
 export default async function CategoryPage({ params }: Props) {
   const { isEnabled: draft } = await draftMode()
-  const category = await getBySlug(draft, 'categories', (await params).slug)
-  if (!category) notFound()
+  const { slug } = await params
+  const category = await getBySlug(draft, 'categories', slug)
+  if (!category) return redirectOrNotFound(`/insights/category/${slug}/`)
   const { docs } = await listInsights(draft, { category: category.id, limit: CATEGORY_LIMIT })
   const crumbs = await hubCrumbs(draft, [['/insights/', 'Insights']], {
     href: pathFor('categories', category)!,

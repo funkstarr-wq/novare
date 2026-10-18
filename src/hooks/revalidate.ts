@@ -106,3 +106,27 @@ export const revalidateGlobal: GlobalAfterChangeHook = async ({ doc, global, req
   }
   return doc
 }
+
+const redirectPaths = (doc: Doc) => {
+  const from = typeof doc?.from === 'string' ? doc.from : null
+  if (!from) return []
+  const bare = from.replace(/\/+$/, '') || '/'
+  return [bare, bare === '/' ? '/' : `${bare}/`]
+}
+
+/**
+ * A redirect changed: the old URL may have been cached as a 404 (or as the previous target), so
+ * refresh it along with the redirect lookups (src/lib/redirects.ts).
+ */
+export const revalidateRedirect: CollectionAfterChangeHook = async ({ doc, previousDoc, req }) => {
+  await revalidate(req, {
+    paths: [...redirectPaths(doc), ...redirectPaths(previousDoc)],
+    tags: ['redirects'],
+  })
+  return doc
+}
+
+export const revalidateRedirectDelete: CollectionAfterDeleteHook = async ({ doc, req }) => {
+  await revalidate(req, { paths: redirectPaths(doc), tags: ['redirects'] })
+  return doc
+}

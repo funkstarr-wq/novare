@@ -1,6 +1,5 @@
 import type { Metadata } from 'next'
 import { draftMode } from 'next/headers'
-import { notFound } from 'next/navigation'
 
 import { Breadcrumbs } from '@/components/Breadcrumbs'
 import { Media } from '@/components/Media'
@@ -11,6 +10,8 @@ import { hubCrumbs } from '@/lib/crumbs'
 import { getBySlug } from '@/lib/queries'
 import { pathFor } from '@/lib/urls'
 import type { Project } from '@/payload-types'
+import { routeMetadata } from '@/lib/metadata'
+import { redirectOrNotFound } from '@/lib/redirects'
 
 type Props = { params: Promise<{ project: string }> }
 
@@ -22,10 +23,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { isEnabled: draft } = await draftMode()
   const project = await getBySlug(draft, 'projects', (await params).project)
   if (!project) return {}
-  return {
-    title: project.meta?.title || project.name,
-    description: project.meta?.description ?? undefined,
-  }
+  return routeMetadata(draft, {
+    title: project.name,
+    path: pathFor('projects', project)!,
+    meta: project.meta,
+    image: project.gallery?.[0],
+  })
 }
 
 const types: Record<NonNullable<Project['type']>, string> = {
@@ -43,8 +46,9 @@ const statuses: Record<NonNullable<Project['status']>, string> = {
 
 export default async function ProjectPage({ params }: Props) {
   const { isEnabled: draft } = await draftMode()
-  const project = await getBySlug(draft, 'projects', (await params).project)
-  if (!project) notFound()
+  const { project: slug } = await params
+  const project = await getBySlug(draft, 'projects', slug)
+  if (!project) return redirectOrNotFound(`/solutions/real-estate/${slug}/`)
   const crumbs = await hubCrumbs(
     draft,
     [

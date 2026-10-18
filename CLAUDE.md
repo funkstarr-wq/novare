@@ -64,6 +64,9 @@ Local Postgres: copy `.env.example` to `.env`; create the dev and test databases
 - Front end: read Payload only through `src/lib/queries.ts` (cached per collection tag, drafts
   bypass the cache) and build URLs with `src/lib/urls.ts` (`pathFor`, `fileURL`). Payload's file
   URLs are absolute with a trailing slash; `next/image` rejects them, so use `fileURL`.
+- Every public route: `generateMetadata` through `routeMetadata` (`src/lib/metadata.ts`), JSON-LD
+  through `src/lib/jsonld.ts` + `<JsonLd>`, and `redirectOrNotFound(path)` instead of `notFound()`
+  so the redirects collection is checked first. The frontend layout must not await data itself.
 - Content routes render on first request and are cached (`generateStaticParams` returns `[]`).
   Locally, `.next/cache` outlives a database reset: delete `.next` after reseeding.
 - Next.js 16 sends `notFound()` pages as an empty shell that the browser fills in: test 404 UI

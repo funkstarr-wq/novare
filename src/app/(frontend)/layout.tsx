@@ -2,18 +2,32 @@ import type { Metadata } from 'next'
 import { draftMode } from 'next/headers'
 import React from 'react'
 
+import { JsonLd } from '@/components/JsonLd'
 import { Footer } from '@/components/layout/Footer'
 import { Header } from '@/components/layout/Header'
 import { PreviewBanner } from '@/components/layout/PreviewBanner'
+import { organization, website } from '@/lib/jsonld'
+import { getSiteSettings } from '@/lib/queries'
+import { siteURL } from '@/lib/site'
 
 import '@/styles/globals.css'
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000'),
+  metadataBase: new URL(siteURL()),
   title: {
     default: 'Novare',
     template: '%s | Novare',
   },
+}
+
+/**
+ * Site-wide structured data (brief §8.3). Its own component, like the header and footer, so the
+ * layout itself never waits on the database: routes that read the query string must reach that
+ * point first to render per request (the build has no database).
+ */
+async function SiteJsonLd({ draft }: { draft: boolean }) {
+  const settings = await getSiteSettings(draft)
+  return <JsonLd data={[organization(settings), website(settings)]} />
 }
 
 export default async function FrontendLayout({ children }: { children: React.ReactNode }) {
@@ -27,6 +41,7 @@ export default async function FrontendLayout({ children }: { children: React.Rea
         >
           Skip to main content
         </a>
+        <SiteJsonLd draft={draft} />
         {draft && <PreviewBanner />}
         <Header draft={draft} />
         <main id="main-content" className="flex flex-col">
