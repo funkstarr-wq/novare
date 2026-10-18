@@ -89,6 +89,11 @@ Open items that need an answer from Novare or the agency are marked **Needs deci
     **Lighthouse CI measures cached pages:** `scripts/lhci-server.mjs` starts the server and
     requests each audited page and its images once before the runs, since pages are rendered
     once after a publish and then served from cache to every visitor.
+    **Timing budgets use the median of the 5 runs** (`aggregationMethod: "median"` for LCP, CLS
+    and TBT; the category scores keep `median-run`). `median-run` asserts the LCP of the run with
+    the median performance score, so one noisy run decides; runs of the same build swing by
+    ±400 ms here, and CI runners by more. The budgets themselves (2.0 s, 0.1, 150 ms) are
+    unchanged.
 19. **Needs decision: Lighthouse on staging (M3 "done when").** Staging has no content (the seed
     only runs in PR environments), so its templates have nothing to render until M6 imports the
     real content. Options: run `pnpm seed` once on staging (fake, clearly marked content, removed
