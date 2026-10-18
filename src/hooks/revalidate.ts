@@ -5,57 +5,56 @@ import type {
   PayloadRequest,
 } from 'payload'
 
+import { countryPath, pathFor } from '@/lib/urls'
+
 type Doc = Record<string, unknown> | null | undefined
 export type Targets = { paths: string[]; tags: string[] }
 
-const slugOf = (doc: Doc) => (typeof doc?.slug === 'string' && doc.slug ? doc.slug : null)
-const each = (doc: Doc, path: (slug: string) => string) => {
-  const slug = slugOf(doc)
-  return slug ? [path(slug)] : []
+/** The document's own URL (src/lib/urls.ts), when it has one. */
+const own = (collection: string) => (doc: Doc) => {
+  const path = pathFor(collection, doc)
+  return path ? [path] : []
 }
 
 /**
- * The single dependency map (brief §6.4): which URLs (routes from §7) and cache tags a change to
- * a document touches. Listings and blocks that show a collection (cards, team grids, office
- * lists) read it under the collection's tag, so one tag refreshes them all.
+ * The single dependency map (brief §6.4): which URLs (routes from §7) a change to a document
+ * touches, besides its own. Listings and blocks that show a collection (cards, team grids, office
+ * lists) read it under the collection's cache tag, so one tag refreshes them all.
  */
-const DEPENDENCIES: Record<string, (doc: Doc) => string[]> = {
-  pages: (doc) => (typeof doc?.path === 'string' ? [doc.path] : []),
-  solutions: (doc) => ['/', '/solutions/', ...each(doc, (s) => `/solutions/${s}/`)],
-  funds: (doc) => [
-    '/solutions/multi-management/',
-    ...each(doc, (s) => `/solutions/multi-management/${s}/`),
-  ],
-  projects: (doc) => [
-    '/solutions/real-estate/',
-    ...each(doc, (s) => `/solutions/real-estate/${s}/`),
-  ],
-  people: (doc) => ['/about/leadership/', ...each(doc, (s) => `/about/leadership/${s}/`)],
+const LISTINGS: Record<string, (doc: Doc) => string[]> = {
+  pages: () => [],
+  solutions: () => ['/', '/solutions/'],
+  funds: () => ['/solutions/multi-management/'],
+  projects: () => ['/solutions/real-estate/'],
+  people: () => ['/about/leadership/'],
   offices: (doc) => [
     '/locations/',
     ...(typeof doc?.countrySlug === 'string' && doc.countrySlug
-      ? [`/locations/${doc.countrySlug}/`]
+      ? [countryPath(doc.countrySlug)]
       : []),
   ],
   awards: () => ['/awards/'],
-  jobs: (doc) => ['/careers/', ...each(doc, (s) => `/careers/${s}/`)],
-  insights: (doc) => ['/', '/insights/', ...each(doc, (s) => `/insights/${s}/`)],
-  categories: (doc) => ['/insights/', ...each(doc, (s) => `/insights/category/${s}/`)],
+  jobs: () => ['/careers/'],
+  insights: () => ['/', '/insights/'],
+  categories: () => ['/insights/'],
   'press-mentions': () => ['/news/in-the-press/'],
-  research: (doc) => [
-    '/research/hedge-fund-survey/',
-    ...(typeof doc?.year === 'number' ? [`/research/hedge-fund-survey/${doc.year}/`] : []),
-  ],
-  'legal-documents': (doc) => each(doc, (s) => `/legal/${s}/`),
+  research: () => ['/research/hedge-fund-survey/'],
+  'legal-documents': () => [],
 }
+
+const dependencies = (collection: string, doc: Doc) =>
+  collection in LISTINGS ? [...(LISTINGS[collection]?.(doc) ?? []), ...own(collection)(doc)] : []
 
 /**
  * Paths and tags to refresh after a change. The previous version counts too, so a renamed or
  * moved document's old URL stops serving stale content. The sitemap lists every public URL.
  */
 export function revalidationTargets(collection: string, doc: Doc, previousDoc?: Doc): Targets {
-  const pathsFor = DEPENDENCIES[collection] ?? (() => [])
-  const paths = new Set([...pathsFor(doc), ...pathsFor(previousDoc), '/sitemap.xml'])
+  const paths = new Set([
+    ...dependencies(collection, doc),
+    ...dependencies(collection, previousDoc),
+    '/sitemap.xml',
+  ])
   return { paths: [...paths], tags: [collection] }
 }
 

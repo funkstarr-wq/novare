@@ -1,10 +1,14 @@
 {
   "ci": {
     "collect": {
-      "url": ["http://localhost:3000/"],
-      "startServerCommand": "pnpm start",
-      "startServerReadyPattern": "Ready in",
-      "startServerReadyTimeout": 60000,
+      "url": [
+        "http://localhost:3000/",
+        "http://localhost:3000/solutions/investment-consulting/",
+        "http://localhost:3000/insights/placeholder-article-one/"
+      ],
+      "startServerCommand": "node scripts/lhci-server.mjs",
+      "startServerReadyPattern": "LHCI ready",
+      "startServerReadyTimeout": 180000,
       "numberOfRuns": 5
     },
     "assert": {
@@ -24,16 +28,13 @@
         ],
         "largest-contentful-paint": [
           "error",
-          { "maxNumericValue": 2000, "aggregationMethod": "median-run" }
+          { "maxNumericValue": 2000, "aggregationMethod": "median" }
         ],
         "cumulative-layout-shift": [
           "error",
-          { "maxNumericValue": 0.1, "aggregationMethod": "median-run" }
+          { "maxNumericValue": 0.1, "aggregationMethod": "median" }
         ],
-        "total-blocking-time": [
-          "error",
-          { "maxNumericValue": 150, "aggregationMethod": "median-run" }
-        ]
+        "total-blocking-time": ["error", { "maxNumericValue": 150, "aggregationMethod": "median" }]
       }
     },
     "upload": {

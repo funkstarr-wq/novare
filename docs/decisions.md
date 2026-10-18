@@ -4,6 +4,102 @@ A running log of choices made during the build, newest milestone first. Deviatio
 [`BUILD_BRIEF.md`](BUILD_BRIEF.md) are marked **Deviation** and flagged in the milestone's PR.
 Open items that need an answer from Novare or the agency are marked **Needs decision**.
 
+## M3 — Front end (2026-10-18)
+
+### Rendering and caching
+
+1. **Pages render on first request, then stay cached until their content changes.** The build has
+   no database, so every content route has a `generateStaticParams` that returns `[]`: Next.js
+   renders each URL on its first request and caches it (on-demand ISR). Publishing revalidates the
+   URLs and cache tags in `src/hooks/revalidate.ts`. Pages with a closing date (vacancies) and the
+   catch-all also revalidate hourly as a safety net.
+2. **All reads go through `src/lib/queries.ts`.** Each query is wrapped in `unstable_cache` under
+   the tags of the collections it reads, so a block that lists solutions on any page refreshes
+   when a solution is published. Reads use the public's access (`overrideAccess: false`, no
+   user), so a draft can't leak into a cached page, even through a relationship. Next.js 16's
+   Cache Components (`use cache`) were not adopted: the previous model is documented as
+   supported, and Payload's admin is not tested with `cacheComponents`.
+3. **`/insights/` and `/search/` render per request**, because they read the query string
+   (`?page=`, `?q=`); the queries behind `/insights/` are still cached.
+4. **One URL map.** `src/lib/urls.ts` (`pathFor`) gives each document's URL (brief §7). Routes,
+   links, rich-text links, live preview and the revalidation map all use it.
+
+### Routes
+
+5. **An optional catch-all (`[[...path]]`) serves the home page and every `pages` document** by
+   its nested `path`. Explicit routes (solutions, funds, insights…) win over it, as §7 says.
+6. **Listing hubs without a section block** (`/careers/`, `/research/hedge-fund-survey/`,
+   `/awards/`, `/news/in-the-press/`) are rendered by the catch-all from a small registry
+   (`src/components/hubs`). Each shows its `pages` document's content above the listing when the
+   page exists, or works on its own. Hubs that do have a block (`/solutions/`,
+   `/about/leadership/`, `/locations/`) are ordinary pages with that block.
+7. **Funds are listed on their solution's page**; real-estate projects on `/solutions/real-estate/`
+   (the projects collection has no solution field, and §7 puts them under that URL).
+8. **Search is Postgres full-text search** (`websearch_to_tsquery`, English) over the titles and
+   short texts of published documents (`src/lib/search.ts`). The query text is a bound
+   parameter. No search index yet; at a few hundred documents a scan is fast, and a GIN index can
+   come with M6 if the migrated content needs it.
+9. **Known issue: Next.js 16.3.8 sends 404 pages as an empty HTML shell.** `notFound()` answers
+   with status 404 and `noindex`, but the HTML is Next's error shell, and the browser then renders
+   `not-found.tsx` (with search and links). Reproduced in a minimal app without Payload, with one
+   or two root layouts; `global-not-found.js` covers only URLs no route matches, and our catch-all
+   matches every URL. Visitors with JavaScript see the full 404 page; crawlers get the 404 status.
+   Re-check on Next.js upgrades.
+
+### Front end
+
+10. **Only the menu, the contact form and live preview run on the client.** Everything else is
+    server components. The header menu is a disclosure menu (`aria-expanded`, Escape closes and
+    returns focus, click outside closes), and the same list becomes a drawer below the `md`
+    breakpoint.
+11. **Deviation: no web font yet (§8.2 asks for `next/font`).** The neutral theme uses the system
+    font stack. A web font costs LCP and there is no brand typeface to load; add it with
+    `next/font/local` when the designs arrive.
+12. **Uploaded files are linked as plain paths** (`fileURL` in `src/lib/urls.ts`). Payload returns
+    absolute URLs with a trailing slash (it follows `trailingSlash`), which `next/image` rejects
+    and which cost file downloads a redirect.
+13. **Seed changes:** the Insights page holds an intro instead of an insight-cards block (the route
+    lists insights itself), and the seeded header has Insights, Locations and a Contact us button.
+
+### Live preview (brief §8.5)
+
+14. **`admin.livePreview`** is on for every collection with pages, and for the header and footer,
+    with the three breakpoints from the brief. The preview URL is `/api/preview/?secret=…&path=…`.
+15. **`/api/preview/` turns on Draft Mode only with the secret _and_ a staff session that has
+    entered its 2FA code** (the plugin's own `totpAccess`), and only redirects to a path on this
+    site. Draft pages read the latest drafts and are never cached; listings around them stay as
+    published. A banner offers "Exit preview" (`/api/preview/exit/`).
+
+### Left for later milestones
+
+16. **M4 (SEO layer):** canonical URLs, Open Graph, JSON-LD (Organization, BreadcrumbList,
+    FinancialService, Person, Article, LocalBusiness, JobPosting, FAQPage), sitemap, robots,
+    `rel=prev/next` in the head, `X-Robots-Tag: noindex` in draft mode, and the redirects lookup
+    for unknown URLs. M3 ships titles and descriptions only, and visible breadcrumbs.
+17. **M7 (hardening):** form spam protection (honeypot, timing, Turnstile), consent logging and
+    submission retention. The contact form posts to the form-builder endpoint as it is.
+18. **Payload's client-hint headers are limited to the admin** (`next.config.ts`). `withPayload`
+    sends `Critical-CH: Sec-CH-Prefers-Color-Scheme` on every route, for the admin's colour
+    scheme; Critical-CH makes a browser that didn't send the hint repeat the request, which cost
+    every new visitor a round trip. Removing it from public pages cut the median LCP by 150–250 ms
+    (now 1.56–1.67 s locally against the 2.0 s budget, mobile emulation).
+    `experimental.inlineCss` was tried and dropped: no LCP gain, and 1.3 MB of admin CSS in every
+    admin page's HTML. The hero image loads with `loading="eager"` and `fetchPriority="high"`
+    (Next.js 16 deprecates `priority`).
+    **Lighthouse CI measures cached pages:** `scripts/lhci-server.mjs` starts the server and
+    requests each audited page and its images once before the runs, since pages are rendered
+    once after a publish and then served from cache to every visitor.
+    **Timing budgets use the median of the 5 runs** (`aggregationMethod: "median"` for LCP, CLS
+    and TBT; the category scores keep `median-run`). `median-run` asserts the LCP of the run with
+    the median performance score, so one noisy run decides; runs of the same build swing by
+    ±400 ms here, and CI runners by more. The budgets themselves (2.0 s, 0.1, 150 ms) are
+    unchanged.
+19. **Needs decision: Lighthouse on staging (M3 "done when").** Staging has no content (the seed
+    only runs in PR environments), so its templates have nothing to render until M6 imports the
+    real content. Options: run `pnpm seed` once on staging (fake, clearly marked content, removed
+    before M6), or measure staging after M6. CI runs the same budgets against a seeded build on
+    every PR.
+
 ## M2 — Roles, approval, audit (2026-10-17)
 
 ### Role matrix (brief §6.1)

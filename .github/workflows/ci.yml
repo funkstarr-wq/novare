@@ -134,12 +134,15 @@ jobs:
       - name: Apply migrations
         run: pnpm payload migrate
 
-      - name: Generate a throwaway admin for this run
+      - name: Generate a throwaway admin and preview secret for this run
         run: |
           password="$(openssl rand -hex 16)"
+          preview="$(openssl rand -hex 16)"
           echo "::add-mask::$password"
+          echo "::add-mask::$preview"
           echo "SEED_ADMIN_EMAIL=ci-admin@example.test" >> "$GITHUB_ENV"
           echo "SEED_ADMIN_PASSWORD=$password" >> "$GITHUB_ENV"
+          echo "PREVIEW_SECRET=$preview" >> "$GITHUB_ENV"
 
       - name: Seed
         run: pnpm seed

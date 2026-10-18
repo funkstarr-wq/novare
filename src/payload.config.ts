@@ -31,6 +31,8 @@ import { Solutions } from './collections/Solutions'
 import { Users } from './collections/Users'
 import { admins, anyone, nobody, publicOperations, publishers, staff } from './access'
 import { linkableCollections } from './fields/link'
+import { previewURL } from './lib/preview'
+import { pathFor } from './lib/urls'
 import { richTextEditor } from './fields/richText'
 import { AiSettings, Footer, Header, SiteSettings } from './globals'
 
@@ -46,6 +48,18 @@ export default buildConfig({
     },
     meta: {
       titleSuffix: ' | Novare CMS',
+    },
+    // Live preview (brief §8.5): the page in an iframe, refreshed on every save.
+    livePreview: {
+      url: ({ data, collectionConfig }) =>
+        previewURL(collectionConfig ? pathFor(collectionConfig.slug, data) : '/'),
+      collections: linkableCollections,
+      globals: ['header', 'footer'],
+      breakpoints: [
+        { label: 'Mobile', name: 'mobile', width: 375, height: 667 },
+        { label: 'Tablet', name: 'tablet', width: 768, height: 1024 },
+        { label: 'Desktop', name: 'desktop', width: 1440, height: 900 },
+      ],
     },
   },
   collections: [

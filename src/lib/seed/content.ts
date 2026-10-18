@@ -418,9 +418,14 @@ export async function seedContent(payload: Payload): Promise<void> {
     },
     { blockType: 'documentDownloads', heading: 'Downloads', documents: [factsheet.id] },
   ])
-  await page('insights', 'Insights', [{ blockType: 'insightCards', mode: 'latest', limit: 12 }])
-  await page('locations', 'Locations', [{ blockType: 'officeCards', scope: 'all' }])
-  await page('contact', 'Contact', [
+  // /insights/ lists every insight itself (paginated); its page only adds the intro.
+  const insightsPage = await page('insights', 'Insights', [
+    { blockType: 'richText', content: richText(TODO('insights introduction')) },
+  ])
+  const locationsPage = await page('locations', 'Locations', [
+    { blockType: 'officeCards', scope: 'all' },
+  ])
+  const contactPage = await page('contact', 'Contact', [
     { blockType: 'contactForm', heading: 'Send us a message', form: enquiryForms[0].id },
     {
       blockType: 'faq',
@@ -475,7 +480,22 @@ export async function seedContent(payload: Payload): Promise<void> {
               },
             })),
           },
+          ...[
+            ['Insights', insightsPage],
+            ['Locations', locationsPage],
+          ].map(([label, target]) => ({
+            link: {
+              type: 'internal' as const,
+              label: label as string,
+              reference: { relationTo: 'pages' as const, value: (target as { id: number }).id },
+            },
+          })),
         ],
+        utilityCta: {
+          type: 'internal',
+          label: 'Contact us',
+          reference: { relationTo: 'pages', value: contactPage.id },
+        },
       },
     })
   const footer = await payload.findGlobal({ slug: 'footer', depth: 0 })

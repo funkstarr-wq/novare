@@ -1,0 +1,28 @@
+// Every front-end template (brief §7) with a URL that `pnpm seed` fills. Used by the smoke tests
+// (templates.e2e.ts) and the axe checks (a11y.e2e.ts).
+export const templates = [
+  { name: 'home', path: '/' },
+  { name: 'page', path: '/about/' },
+  { name: 'nested page', path: '/about/history/' },
+  { name: 'leadership', path: '/about/leadership/' },
+  { name: 'person', path: '/about/leadership/alex-example/' },
+  { name: 'solutions hub', path: '/solutions/' },
+  { name: 'solution', path: '/solutions/investment-consulting/' },
+  { name: 'solution with funds', path: '/solutions/multi-management/' },
+  { name: 'fund', path: '/solutions/multi-management/example-fund-of-hedge-funds/' },
+  { name: 'project', path: '/solutions/real-estate/example-mixed-use-development/' },
+  { name: 'research hub', path: '/research/hedge-fund-survey/' },
+  { name: 'research year', path: '/research/hedge-fund-survey/2025/' },
+  { name: 'insights', path: '/insights/' },
+  { name: 'insight', path: '/insights/placeholder-article-one/' },
+  { name: 'insight category', path: '/insights/category/market-commentary/' },
+  { name: 'press', path: '/news/in-the-press/' },
+  { name: 'awards', path: '/awards/' },
+  { name: 'locations', path: '/locations/' },
+  { name: 'country', path: '/locations/exampleland/' },
+  { name: 'careers', path: '/careers/' },
+  { name: 'vacancy', path: '/careers/example-analyst/' },
+  { name: 'contact', path: '/contact/' },
+  { name: 'legal', path: '/legal/privacy-notice/' },
+  { name: 'search', path: '/search/?q=placeholder' },
+] as const

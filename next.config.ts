@@ -31,4 +31,18 @@ const nextConfig: NextConfig = {
   },
 }
 
-export default withPayload(nextConfig, { devBundleServerPackages: false })
+const config = withPayload(nextConfig, { devBundleServerPackages: false })
+
+// Payload sends `Critical-CH: Sec-CH-Prefers-Color-Scheme` (with Accept-CH and Vary) on every
+// route, for the admin's colour scheme. Critical-CH makes a browser that didn't send the hint
+// repeat the whole request, which costs every new visitor a round trip on the public site, so
+// those headers go to the admin only.
+const payloadHeaders = config.headers
+config.headers = async () =>
+  ((await payloadHeaders?.()) ?? []).map((rule) =>
+    rule.source === '/:path*' && rule.headers.some((header) => header.key === 'Critical-CH')
+      ? { ...rule, source: '/admin/:path*' }
+      : rule,
+  )
+
+export default config

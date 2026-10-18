@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test'
 
 import { adminEmail, seeded, submitLoginForm, totpCode } from './support/auth'
 
-test.describe('home (placeholder)', () => {
+test.describe('home', () => {
   test('renders one h1 with title and description', async ({ page }) => {
     const response = await page.goto('/')
 
@@ -10,7 +10,6 @@ test.describe('home (placeholder)', () => {
     await expect(page).toHaveTitle('Novare')
     await expect(page.locator('meta[name="description"]')).toHaveAttribute('content', /.+/)
     await expect(page.locator('h1')).toHaveCount(1)
-    await expect(page.locator('h1')).toHaveText('Novare')
   })
 })
 
