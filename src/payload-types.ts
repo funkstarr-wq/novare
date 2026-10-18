@@ -1490,6 +1490,8 @@ export interface PressMention {
   _status?: ('draft' | 'published') | null;
 }
 /**
+ * Every request to the AI assistant: what it proposed, what was applied, and what it cost.
+ *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "ai-changesets".
  */
@@ -1499,6 +1501,8 @@ export interface AiChangeset {
   user: number | User;
   model?: string | null;
   status: 'proposed' | 'applied_to_draft' | 'rejected' | 'published' | 'rolled_back' | 'failed';
+  reply?: string | null;
+  error?: string | null;
   context?:
     | {
         [k: string]: unknown;
@@ -1544,6 +1548,13 @@ export interface AiChangeset {
   inputTokens?: number | null;
   outputTokens?: number | null;
   costUSD?: number | null;
+  appliedAt?: string | null;
+  publishedAt?: string | null;
+  rolledBackAt?: string | null;
+  /**
+   * A follow-up request that replaced this proposal.
+   */
+  supersededBy?: (number | null) | AiChangeset;
   updatedAt: string;
   createdAt: string;
 }
@@ -2588,6 +2599,8 @@ export interface AiChangesetsSelect<T extends boolean = true> {
   user?: T;
   model?: T;
   status?: T;
+  reply?: T;
+  error?: T;
   context?: T;
   messages?: T;
   operations?: T;
@@ -2609,6 +2622,10 @@ export interface AiChangesetsSelect<T extends boolean = true> {
   inputTokens?: T;
   outputTokens?: T;
   costUSD?: T;
+  appliedAt?: T;
+  publishedAt?: T;
+  rolledBackAt?: T;
+  supersededBy?: T;
   updatedAt?: T;
   createdAt?: T;
 }

@@ -30,6 +30,7 @@ import { adminGroups, withContentRules } from './collections/shared'
 import { Solutions } from './collections/Solutions'
 import { Users } from './collections/Users'
 import { admins, anyone, nobody, publicOperations, publishers, staff } from './access'
+import { aiEndpoints } from './endpoints/ai'
 import { linkableCollections } from './fields/link'
 import { revalidateRedirect, revalidateRedirectDelete } from './hooks/revalidate'
 import { previewURL } from './lib/preview'
@@ -49,6 +50,13 @@ export default buildConfig({
     },
     meta: {
       titleSuffix: ' | Novare CMS',
+    },
+    // The AI editor (brief §10.2): a site-wide assistant at /admin/assistant/ with history.
+    components: {
+      afterNavLinks: ['/admin/ai/AssistantNavLink#AssistantNavLink'],
+      views: {
+        assistant: { Component: '/admin/ai/AssistantView#AssistantView', path: '/assistant' },
+      },
     },
     // Live preview (brief §8.5): the page in an iframe, refreshed on every save.
     livePreview: {
@@ -86,6 +94,7 @@ export default buildConfig({
     AuditLog,
   ],
   globals: [Header, Footer, SiteSettings, AiSettings],
+  endpoints: aiEndpoints,
   editor: richTextEditor,
   // English only for v1, but every locale-aware API is already in place: adding a language is
   // this list plus `localized: true` on the fields that need translating (brief §1 non-goals).

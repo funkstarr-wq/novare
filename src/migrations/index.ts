@@ -3,6 +3,7 @@ import * as migration_20261017_195708_data_model from './20261017_195708_data_mo
 import * as migration_20261017_203529_roles_review from './20261017_203529_roles_review';
 import * as migration_20261018_091131_two_factor from './20261018_091131_two_factor';
 import * as migration_20261018_193116_seo_noindex from './20261018_193116_seo_noindex';
+import * as migration_20261018_205009_ai_editor from './20261018_205009_ai_editor';
 
 export const migrations = [
   {
@@ -28,6 +29,11 @@ export const migrations = [
   {
     up: migration_20261018_193116_seo_noindex.up,
     down: migration_20261018_193116_seo_noindex.down,
-    name: '20261018_193116_seo_noindex'
+    name: '20261018_193116_seo_noindex',
+  },
+  {
+    up: migration_20261018_205009_ai_editor.up,
+    down: migration_20261018_205009_ai_editor.down,
+    name: '20261018_205009_ai_editor'
   },
 ];

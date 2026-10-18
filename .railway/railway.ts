@@ -63,6 +63,9 @@ export default defineRailway((ctx) => {
       S3_ACCESS_KEY_ID: ref(media, 'ACCESS_KEY_ID'),
       S3_SECRET_ACCESS_KEY: ref(media, 'SECRET_ACCESS_KEY'),
       S3_REGION: ref(media, 'REGION'),
+      // The AI editor's model (brief §4). Its API key and budget are set by hand, on staging and
+      // production only (docs/railway.md step 9).
+      ANTHROPIC_MODEL: 'claude-sonnet-5-5',
       PAYLOAD_SECRET: preserve(),
       PREVIEW_SECRET: preserve(),
       REVALIDATE_SECRET: preserve(),

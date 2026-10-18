@@ -1,0 +1,165 @@
+/* AI assistant panel (brief §10.2). Uses the admin's own theme variables, so it follows the
+   light and dark admin themes. */
+.ai-panel {
+  display: grid;
+  gap: calc(var(--base) * 0.75);
+  max-width: 64rem;
+}
+
+.ai-panel__status {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--base);
+  color: var(--theme-elevation-650);
+  font-size: 0.875rem;
+}
+
+.ai-panel__notice,
+.ai-panel__flags,
+.ai-panel__applied {
+  margin: 0;
+  padding: calc(var(--base) * 0.5) calc(var(--base) * 0.75);
+  border-radius: var(--style-radius-s);
+  background: var(--theme-warning-100);
+  color: var(--theme-warning-800);
+}
+
+.ai-panel__applied {
+  background: var(--theme-success-100);
+  color: var(--theme-success-800);
+}
+
+.ai-panel__applied p {
+  margin: 0 0 0.25rem;
+}
+
+.ai-panel__flags {
+  list-style: none;
+}
+
+.ai-panel__thread {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ai-line {
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--style-radius-s);
+  white-space: pre-wrap;
+}
+
+.ai-line--user {
+  justify-self: end;
+  max-width: 85%;
+  background: var(--theme-elevation-100);
+}
+
+.ai-line--assistant {
+  max-width: 85%;
+  border: 1px solid var(--theme-elevation-150);
+}
+
+.ai-line--step {
+  padding-block: 0;
+  color: var(--theme-elevation-650);
+  font-size: 0.8125rem;
+}
+
+.ai-line--error {
+  background: var(--theme-error-100);
+  color: var(--theme-error-800);
+}
+
+.ai-panel__changes h3 {
+  margin: 0 0 0.5rem;
+}
+
+.ai-panel__ops {
+  display: grid;
+  gap: 0.75rem;
+  margin: 0.5rem 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ai-op {
+  padding: 0.75rem;
+  border: 1px solid var(--theme-elevation-150);
+  border-radius: var(--style-radius-s);
+}
+
+.ai-op__summary {
+  margin: 0;
+}
+
+.ai-diff,
+.ai-history {
+  width: 100%;
+  margin-top: 0.5rem;
+  border-collapse: collapse;
+  font-size: 0.8125rem;
+}
+
+.ai-diff th,
+.ai-diff td,
+.ai-history th,
+.ai-history td {
+  padding: 0.25rem 0.5rem;
+  border-bottom: 1px solid var(--theme-elevation-100);
+  text-align: left;
+  vertical-align: top;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.ai-diff__before {
+  color: var(--theme-error-750);
+  text-decoration: line-through;
+}
+
+.ai-diff__after {
+  color: var(--theme-success-750);
+}
+
+.ai-panel__actions,
+.ai-panel__form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: end;
+}
+
+.ai-panel__form label {
+  flex-basis: 100%;
+  font-weight: 600;
+}
+
+.ai-panel__form textarea {
+  flex: 1 1 20rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--theme-elevation-250);
+  border-radius: var(--style-radius-s);
+  background: var(--theme-input-bg);
+  color: var(--theme-text);
+  font: inherit;
+}
+
+.ai-history__doc {
+  display: block;
+}
+
+.ai-view h2 {
+  margin-top: calc(var(--base) * 2);
+}
+
+.ai-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
