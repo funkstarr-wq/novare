@@ -1,7 +1,11 @@
 {
   "ci": {
     "collect": {
-      "url": ["http://localhost:3000/"],
+      "url": [
+        "http://localhost:3000/",
+        "http://localhost:3000/solutions/investment-consulting/",
+        "http://localhost:3000/insights/placeholder-article-one/"
+      ],
       "startServerCommand": "pnpm start",
       "startServerReadyPattern": "Ready in",
       "startServerReadyTimeout": 60000,

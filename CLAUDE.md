@@ -61,6 +61,13 @@ Local Postgres: copy `.env.example` to `.env`; create the dev and test databases
 - 2FA (payload-totp) wraps every access function and refuses requests without a verified
   session. A new collection, global or operation the public site needs must opt out with
   `custom: publicOperations(...)` (`src/access`), or visitors get 403s. Keep the plugin last.
+- Front end: read Payload only through `src/lib/queries.ts` (cached per collection tag, drafts
+  bypass the cache) and build URLs with `src/lib/urls.ts` (`pathFor`, `fileURL`). Payload's file
+  URLs are absolute with a trailing slash; `next/image` rejects them, so use `fileURL`.
+- Content routes render on first request and are cached (`generateStaticParams` returns `[]`).
+  Locally, `.next/cache` outlives a database reset: delete `.next` after reseeding.
+- Next.js 16 sends `notFound()` pages as an empty shell that the browser fills in: test 404 UI
+  in Playwright, not with `curl`.
 - Admin e2e tests reuse sessions made by `tests/e2e/auth.setup.ts`; API calls in tests need
   `headers: sameOrigin(baseURL)`, or Payload ignores the session cookie.
 - Migrations are generated, but may be hand-edited for data backfills; mark the edit with a

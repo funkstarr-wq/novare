@@ -58,3 +58,58 @@
     outline-offset: 2px;
   }
 }
+
+/* Rich text from Payload (src/components/RichText.tsx): only the elements editors can create. */
+@layer components {
+  .rich-text {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    max-width: var(--container-prose);
+  }
+
+  .rich-text h2 {
+    margin-top: 1rem;
+    font-size: var(--text-2xl);
+    line-height: var(--text-2xl--line-height);
+    font-weight: 600;
+    color: var(--color-brand-strong);
+  }
+
+  .rich-text h3 {
+    margin-top: 0.5rem;
+    font-size: var(--text-xl);
+    line-height: var(--text-xl--line-height);
+    font-weight: 600;
+  }
+
+  .rich-text h4 {
+    font-size: var(--text-lg);
+    font-weight: 600;
+  }
+
+  .rich-text ul,
+  .rich-text ol {
+    padding-left: 1.5rem;
+  }
+
+  .rich-text ul {
+    list-style: disc;
+  }
+
+  .rich-text ol {
+    list-style: decimal;
+  }
+
+  .rich-text blockquote {
+    border-left: 4px solid var(--color-border);
+    padding-left: 1rem;
+    color: var(--color-ink-muted);
+  }
+
+  .rich-text a {
+    color: var(--color-brand);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+}
