@@ -9,15 +9,17 @@ import { adminGroups, draftVersions } from './shared'
 
 /**
  * The page's URL path with a trailing slash, from the breadcrumbs the nested-docs plugin has just
- * populated (its hook runs before this one). The top-level page with slug `home` is `/`.
+ * populated (its hook runs before this one). The top-level page with slug `home` is `/`. A page
+ * without a slug yet (a fresh autosave draft) has no path, so blank drafts don't collide.
  */
 const setPath: CollectionBeforeChangeHook = ({ data }) => {
   const crumbs: { url?: null | string }[] | undefined = data.breadcrumbs
   const url = crumbs?.at(-1)?.url
 
-  if (data.slug === 'home' && !data.parent) data.path = '/'
+  if (!data.slug) data.path = null
+  else if (data.slug === 'home' && !data.parent) data.path = '/'
   else if (url) data.path = `${url}/`
-  else if (data.slug) data.path = `/${data.slug}/`
+  else data.path = `/${data.slug}/`
 
   return data
 }
