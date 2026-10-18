@@ -55,6 +55,12 @@ through reference variables (`S3_BUCKET=${{media.BUCKET}}`, `S3_ENDPOINT=${{medi
 7. **Backups.** Postgres service → Backups: enable daily backups in `production` and `staging`.
 8. **Wait for CI.** On the `web` service, turn on Wait for CI so a deploy only starts once the
    GitHub Actions checks for that commit pass.
+9. **AI editor (M5).** On `staging` and `production` only, set `ANTHROPIC_API_KEY` (a key from
+   an Anthropic Console workspace with a spend limit) and `AI_MONTHLY_BUDGET_USD`. Then, in the
+   admin, an admin ticks AI settings → Enabled. Without a key, a budget and that switch the
+   assistant refuses every request, so PR environments (which copy staging's variables) should
+   not get the key: mark it as not shared with PR environments, or leave it off staging until
+   the manual test. Never set `AI_MOCK` on Railway; it is ignored there anyway.
 
 ## Checking a deploy
 

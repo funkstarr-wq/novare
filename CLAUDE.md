@@ -73,6 +73,11 @@ Local Postgres: copy `.env.example` to `.env`; create the dev and test databases
   in Playwright, not with `curl`.
 - Admin e2e tests reuse sessions made by `tests/e2e/auth.setup.ts`; API calls in tests need
   `headers: sameOrigin(baseURL)`, or Payload ignores the session cookie.
+- AI editor (`src/ai/`): the model only proposes; `src/ai/apply.ts` writes drafts as the user.
+  A new editable field goes in `src/ai/whitelist.ts`; its zod schema comes from the Payload
+  config. Tests never call the API: integration tests pass a mock `ModelClient`, e2e runs the
+  server with `AI_MOCK=1` (ignored on Railway). Without an enabled switch and a monthly budget
+  (AI settings or `AI_MONTHLY_BUDGET_USD`) every plan is refused.
 - Migrations are generated, but may be hand-edited for data backfills; mark the edit with a
   comment. Collections live in `src/collections/`, page sections in `src/blocks/`, shared field
   builders (slug, link, seo tab, rich text, layout) in `src/fields/`.
