@@ -1,12 +1,15 @@
 import type { Metadata } from 'next'
 import { draftMode } from 'next/headers'
-import { notFound } from 'next/navigation'
 
 import { Breadcrumbs } from '@/components/Breadcrumbs'
 import { HUBS } from '@/components/hubs'
+import { JsonLd } from '@/components/JsonLd'
 import { PageHero } from '@/components/PageHeader'
 import { opensWithHero, RenderBlocks } from '@/components/RenderBlocks'
 import { pageCrumbs } from '@/lib/crumbs'
+import { faqOf } from '@/lib/faq'
+import { routeMetadata } from '@/lib/metadata'
+import { redirectOrNotFound } from '@/lib/redirects'
 import { getPageByPath, getSiteSettings } from '@/lib/queries'
 
 type Props = { params: Promise<{ path?: string[] }> }
@@ -25,12 +28,16 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const path = toPath((await params).path)
   const { isEnabled: draft } = await draftMode()
   const page = await getPageByPath(draft, path)
-  const title = page?.meta?.title || page?.title || HUBS[path]?.title
+  const title = path === '/' ? page?.meta?.title || 'Novare' : page?.title || HUBS[path]?.title
   if (!title) return {}
-  return {
-    title: path === '/' ? { absolute: page?.meta?.title || 'Novare' } : title,
-    description: page?.meta?.description || page?.hero?.subheading || undefined,
-  }
+  return routeMetadata(draft, {
+    title,
+    path,
+    meta: page?.meta,
+    description: page?.hero?.subheading,
+    image: page?.hero?.image,
+    absoluteTitle: path === '/',
+  })
 }
 
 /** Every `pages` document by its nested path, the home page (`/`) and the listing hubs. */
@@ -39,7 +46,7 @@ export default async function Page({ params }: Props) {
   const { isEnabled: draft } = await draftMode()
   const [page, settings] = await Promise.all([getPageByPath(draft, path), getSiteSettings(draft)])
   const hub = HUBS[path]
-  if (!page && !hub) notFound()
+  if (!page && !hub) return redirectOrNotFound(path)
 
   const blocks = page?.layout
   const heroTitle = opensWithHero(blocks)
@@ -48,6 +55,7 @@ export default async function Page({ params }: Props) {
 
   return (
     <>
+      <JsonLd data={[faqOf(blocks)]} />
       {path !== '/' && <Breadcrumbs items={crumbs} />}
       {!heroTitle && <PageHero page={page} title={title} />}
       <RenderBlocks

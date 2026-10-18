@@ -223,3 +223,78 @@ export const listJobs = cachedQuery('jobs', ['jobs'], (draft, today: string) =>
 export const listResearch = cachedQuery('research', ['research'], (draft) =>
   list(draft, 'research', { sort: '-year' }),
 )
+
+// --- Redirects -----------------------------------------------------------------------------
+
+/**
+ * The redirect for a path that matched no document (brief §7), from the redirects collection.
+ * The public cannot read redirects, so this lookup runs with access overridden; it returns only
+ * the target. Matches the path with or without its trailing slash.
+ */
+export const getRedirect = cachedQuery('redirect', ['redirects'], async (_draft, path: string) => {
+  const payload = await payloadClient()
+  const bare = path.length > 1 ? path.replace(/\/+$/, '') : path
+  const { docs } = await payload.find({
+    collection: 'redirects',
+    where: { from: { in: [path, bare] } },
+    depth: 1,
+    limit: 1,
+    pagination: false,
+    overrideAccess: true,
+  })
+  return docs[0] ?? null
+})
+
+// --- Sitemap -------------------------------------------------------------------------------
+
+const SITEMAP_COLLECTIONS = [
+  'pages',
+  'solutions',
+  'funds',
+  'projects',
+  'people',
+  'insights',
+  'categories',
+  'jobs',
+  'research',
+  'legal-documents',
+] as const
+
+export type SitemapDoc = {
+  collection: (typeof SITEMAP_COLLECTIONS)[number]
+  doc: Record<string, unknown>
+}
+
+/** Every published document with a URL, for the sitemap (brief §8.3). Offices give countries. */
+export const listSitemapDocs = cachedQuery(
+  'sitemap',
+  [...SITEMAP_COLLECTIONS, 'offices'],
+  async (_draft) => {
+    const payload = await payloadClient()
+    const [docs, offices] = await Promise.all([
+      Promise.all(
+        SITEMAP_COLLECTIONS.map(async (collection) => {
+          const { docs: found } = await payload.find({
+            collection,
+            depth: 0,
+            limit: 5000,
+            pagination: false,
+            ...access(false),
+          })
+          return found.map((doc) => ({
+            collection,
+            doc: doc as unknown as Record<string, unknown>,
+          }))
+        }),
+      ),
+      payload.find({
+        collection: 'offices',
+        depth: 0,
+        limit: 500,
+        pagination: false,
+        ...access(false),
+      }),
+    ])
+    return { docs: docs.flat() as SitemapDoc[], offices: offices.docs }
+  },
+)

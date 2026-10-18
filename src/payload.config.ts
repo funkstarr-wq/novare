@@ -31,6 +31,7 @@ import { Solutions } from './collections/Solutions'
 import { Users } from './collections/Users'
 import { admins, anyone, nobody, publicOperations, publishers, staff } from './access'
 import { linkableCollections } from './fields/link'
+import { revalidateRedirect, revalidateRedirectDelete } from './hooks/revalidate'
 import { previewURL } from './lib/preview'
 import { pathFor } from './lib/urls'
 import { richTextEditor } from './fields/richText'
@@ -129,8 +130,9 @@ export default buildConfig({
       redirectTypes: ['301', '302'],
       overrides: {
         admin: { group: adminGroups.site },
-        // Read by the redirect middleware through the Local API; editors manage them (§6.1).
+        // Read by the redirect lookup through the Local API; editors manage them (§6.1).
         access: { read: staff, create: publishers, update: publishers, delete: publishers },
+        hooks: { afterChange: [revalidateRedirect], afterDelete: [revalidateRedirectDelete] },
       },
     }),
     formBuilderPlugin({

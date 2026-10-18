@@ -1,6 +1,5 @@
 import type { Metadata } from 'next'
 import { draftMode } from 'next/headers'
-import { notFound } from 'next/navigation'
 
 import { Breadcrumbs } from '@/components/Breadcrumbs'
 import { OfficeCard } from '@/components/cards/OfficeCard'
@@ -9,6 +8,10 @@ import { Section } from '@/components/Section'
 import { hubCrumbs } from '@/lib/crumbs'
 import { listOffices } from '@/lib/queries'
 import { countryPath } from '@/lib/urls'
+import { routeMetadata } from '@/lib/metadata'
+import { redirectOrNotFound } from '@/lib/redirects'
+import { JsonLd } from '@/components/JsonLd'
+import * as jsonld from '@/lib/jsonld'
 
 type Props = { params: Promise<{ country: string }> }
 
@@ -18,9 +21,13 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { isEnabled: draft } = await draftMode()
-  const offices = await listOffices(draft, (await params).country)
+  const { country } = await params
+  const offices = await listOffices(draft, country)
   if (offices.length === 0) return {}
-  return { title: `Offices in ${offices[0].country}` }
+  return routeMetadata(draft, {
+    title: `Offices in ${offices[0].country}`,
+    path: countryPath(country),
+  })
 }
 
 /** All offices in one country. LocalBusiness JSON-LD per office arrives with M4. */
@@ -28,7 +35,7 @@ export default async function CountryPage({ params }: Props) {
   const { country } = await params
   const { isEnabled: draft } = await draftMode()
   const offices = await listOffices(draft, country)
-  if (offices.length === 0) notFound()
+  if (offices.length === 0) return redirectOrNotFound(countryPath(country))
   const name = offices[0].country
   const crumbs = await hubCrumbs(draft, [['/locations/', 'Locations']], {
     href: countryPath(country),
@@ -36,6 +43,7 @@ export default async function CountryPage({ params }: Props) {
   })
   return (
     <>
+      <JsonLd data={offices.map(jsonld.office)} />
       <Breadcrumbs items={crumbs} />
       <PageHeader title={`Offices in ${name}`} />
       <Section>

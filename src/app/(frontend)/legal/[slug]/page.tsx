@@ -1,6 +1,5 @@
 import type { Metadata } from 'next'
 import { draftMode } from 'next/headers'
-import { notFound } from 'next/navigation'
 
 import { Breadcrumbs } from '@/components/Breadcrumbs'
 import { PageHeader } from '@/components/PageHeader'
@@ -10,6 +9,8 @@ import { DocumentList } from '@/components/sections/DocumentDownloads'
 import { formatDate } from '@/lib/format'
 import { getBySlug } from '@/lib/queries'
 import { pathFor } from '@/lib/urls'
+import { routeMetadata } from '@/lib/metadata'
+import { redirectOrNotFound } from '@/lib/redirects'
 
 type Props = { params: Promise<{ slug: string }> }
 
@@ -21,13 +22,18 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { isEnabled: draft } = await draftMode()
   const doc = await getBySlug(draft, 'legal-documents', (await params).slug)
   if (!doc) return {}
-  return { title: doc.meta?.title || doc.title, description: doc.meta?.description ?? undefined }
+  return routeMetadata(draft, {
+    title: doc.title,
+    path: pathFor('legal-documents', doc)!,
+    meta: doc.meta,
+  })
 }
 
 export default async function LegalPage({ params }: Props) {
   const { isEnabled: draft } = await draftMode()
-  const doc = await getBySlug(draft, 'legal-documents', (await params).slug)
-  if (!doc) notFound()
+  const { slug } = await params
+  const doc = await getBySlug(draft, 'legal-documents', slug)
+  if (!doc) return redirectOrNotFound(`/legal/${slug}/`)
   return (
     <>
       <Breadcrumbs items={[{ href: pathFor('legal-documents', doc)!, label: doc.title }]} />

@@ -4,15 +4,16 @@ import NextLink from 'next/link'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
 import { PageHeader } from '@/components/PageHeader'
 import { Section } from '@/components/Section'
+import { routeMetadata } from '@/lib/metadata'
 import { search } from '@/lib/search'
 
 import { SearchForm } from './SearchForm'
 
 type Props = { searchParams: Promise<{ q?: string | string[] }> }
 
-export const metadata: Metadata = {
-  title: 'Search',
-  robots: { index: false, follow: true },
+// Search results are never indexed (brief §7).
+export async function generateMetadata(): Promise<Metadata> {
+  return routeMetadata(false, { title: 'Search', path: '/search/', noindex: true })
 }
 
 const labels: Record<string, string> = {

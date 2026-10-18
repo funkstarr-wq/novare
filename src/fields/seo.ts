@@ -9,7 +9,8 @@ import type { Tab } from 'payload'
 
 /**
  * The SEO tab every public collection carries (brief §5): title, description and share image,
- * stored under `meta`. Titles over 60 characters and descriptions over 150 get a warning.
+ * stored under `meta`, plus a switch that keeps the page out of search engines and the sitemap.
+ * Titles over 60 characters and descriptions over 150 get a warning.
  */
 export const seoTab: Tab = {
   name: 'meta',
@@ -28,5 +29,15 @@ export const seoTab: Tab = {
       titlePath: 'meta.title',
       descriptionPath: 'meta.description',
     }),
+    {
+      name: 'noindex',
+      label: 'Hide from search engines',
+      type: 'checkbox',
+      defaultValue: false,
+      admin: {
+        description:
+          'Adds noindex and leaves the page out of the sitemap. Visitors can still open it.',
+      },
+    },
   ],
 }

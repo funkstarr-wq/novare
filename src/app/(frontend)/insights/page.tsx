@@ -8,11 +8,15 @@ import { InsightCard } from '@/components/cards/InsightCard'
 import { PageHero } from '@/components/PageHeader'
 import { opensWithHero, RenderBlocks } from '@/components/RenderBlocks'
 import { Section } from '@/components/Section'
+import { routeMetadata } from '@/lib/metadata'
 import { getPageByPath, listInsights } from '@/lib/queries'
+import { absoluteURL } from '@/lib/site'
 
 type Props = { searchParams: Promise<{ page?: string }> }
 
 // Reads `?page=`, so it renders per request; the queries behind it are cached.
+const pageHref = (n: number) => (n === 1 ? '/insights/' : `/insights/?page=${n}`)
+
 const parsePage = (value: string | undefined) => {
   if (value === undefined) return 1
   return /^[1-9]\d*$/.test(value) ? Number(value) : null
@@ -22,11 +26,15 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
   const { isEnabled: draft } = await draftMode()
   const page = await getPageByPath(draft, '/insights/')
   const number = parsePage((await searchParams).page) ?? 1
-  const title = page?.meta?.title || page?.title || 'Insights'
-  return {
+  const title = page?.title || 'Insights'
+  // Each page of the listing is its own canonical URL (`?page=2`), so every insight stays
+  // reachable for crawlers; rel=prev/next are in the page body (hoisted to <head> by React).
+  return routeMetadata(draft, {
     title: number > 1 ? `${title} (page ${number})` : title,
-    description: page?.meta?.description ?? undefined,
-  }
+    path: pageHref(number),
+    meta: number > 1 ? { ...page?.meta, title: null } : page?.meta,
+    description: page?.hero?.subheading,
+  })
 }
 
 export default async function InsightsPage({ searchParams }: Props) {
@@ -40,10 +48,11 @@ export default async function InsightsPage({ searchParams }: Props) {
   if (number > Math.max(1, insights.totalPages)) notFound()
   const title = page?.title ?? 'Insights'
   const heroTitle = opensWithHero(page?.layout)
-  const pageHref = (n: number) => (n === 1 ? '/insights/' : `/insights/?page=${n}`)
 
   return (
     <>
+      {number > 1 && <link rel="prev" href={absoluteURL(pageHref(number - 1))} />}
+      {number < insights.totalPages && <link rel="next" href={absoluteURL(pageHref(number + 1))} />}
       <Breadcrumbs items={[{ href: '/insights/', label: title }]} />
       {!heroTitle && <PageHero page={page} title={title} />}
       {number === 1 && <RenderBlocks blocks={page?.layout} draft={draft} hasTitle={!heroTitle} />}

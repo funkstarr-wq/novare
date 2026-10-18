@@ -10,6 +10,15 @@ const nextConfig: NextConfig = {
   // Matches the current novare.com URLs (brief §7).
   trailingSlash: true,
   poweredByHeader: false,
+  // Draft mode (live preview) pages must never be indexed (brief §8.3). The draft-mode cookie is
+  // set by /api/preview/, so its presence marks a preview response.
+  headers: async () => [
+    {
+      source: '/:path*',
+      has: [{ type: 'cookie', key: '__prerender_bypass' }],
+      headers: [{ key: 'X-Robots-Tag', value: 'noindex' }],
+    },
+  ],
   images: {
     localPatterns: [
       {

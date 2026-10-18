@@ -4,6 +4,57 @@ A running log of choices made during the build, newest milestone first. Deviatio
 [`BUILD_BRIEF.md`](BUILD_BRIEF.md) are marked **Deviation** and flagged in the milestone's PR.
 Open items that need an answer from Novare or the agency are marked **Needs decision**.
 
+## M4 — SEO layer (2026-10-18)
+
+1. **One metadata helper for every route** (`pageMetadata` in `src/lib/seo.ts`, used through
+   `routeMetadata`): title (`{title} | Novare`; the home page uses its SEO title or "Novare"),
+   description, an absolute canonical URL with a trailing slash, Open Graph and Twitter cards
+   (the share image falls back to the site settings' default), and robots. The SEO tab's title
+   and description win over the document's own. The SEO plugin's admin fields already warn
+   about titles over 60 characters.
+2. **What is `noindex`:**
+   - draft previews (also sent as an `X-Robots-Tag: noindex` header whenever the draft-mode
+     cookie is present, from `next.config.ts`);
+   - search results and the 404 page;
+   - documents with the new **"Hide from search engines"** switch on their SEO tab (a schema
+     change, with a migration, on every collection with an SEO tab);
+   - **every host but production.** Railway sets `RAILWAY_ENVIRONMENT_NAME`, so staging and PR
+     environments are `noindex` and their robots.txt blocks all crawling. Local and CI runs
+     behave like production, so the tests and Lighthouse see the real tags. Lighthouse on
+     staging therefore reports SEO below 100 ("page is blocked from indexing"), which is
+     intended.
+3. **Pagination:** each page of `/insights/` is its own canonical URL (`?page=2`), so every insight
+   stays reachable for crawlers, with `rel=prev` and `rel=next` links (rendered in the page,
+   hoisted into `<head>` by React 19).
+4. **JSON-LD** (`src/lib/jsonld.ts`):
+   - Site-wide: Organization and WebSite (with a SearchAction for `/search/`).
+   - BreadcrumbList on every page but home, from the same trail as the visible breadcrumbs.
+   - FinancialService on solutions, Person on people, Article on insights, Report on research
+     years, a FinancialService (a LocalBusiness subtype) per office on country pages, and
+     FAQPage wherever a page has FAQ sections.
+   - JobPosting on open vacancies only: once the closing date has passed there is no
+     JobPosting, as Google asks.
+   - **Placeholder values (`TODO-CONTENT`) are dropped from JSON-LD**, so unfinished content
+     never reaches search engines as fact. The seed no longer sets a founding year: it was an
+     invented number, and it would have appeared as `foundingDate`.
+5. **Rich Results:** unit tests check the properties Google requires for Organization, Article,
+   JobPosting and FAQPage (`tests/unit/seo.test.ts`). Google's Rich Results Test can only run
+   on a public URL: run it on staging or production once real content is in (M6).
+6. **Sitemap** (`/sitemap.xml`): every published document with a URL, `lastmod` from
+   `updatedAt`, plus the listing hubs and country pages. Hidden documents and closed vacancies
+   are left out; drafts never appear. **robots.txt** allows everything except `/admin/` and
+   `/api/preview/` and names the sitemap. Both are built per request from cached queries.
+7. **Redirects:** a URL that matches no document checks the redirects collection before the 404
+   (`redirectOrNotFound` in `src/lib/redirects.ts`, used by every route): 301 entries answer 308
+   and 302 entries answer 307, the equivalents Next.js sends. Saving or deleting a redirect
+   refreshes its old URL, which may have been cached as a 404. **Known quirk:** Next.js sends the
+   `Location` header twice with the same value; browsers and crawlers accept that. M6's crawl
+   check should read the first value.
+8. **Next.js 16 detail:** the layout must not await the database itself. Routes that read the
+   query string (`/insights/`, `/search/`) have to reach that read before any database call, or
+   the build (which has no database) tries to prerender them. The site-wide JSON-LD therefore
+   lives in its own component, like the header and footer.
+
 ## M3 — Front end (2026-10-18)
 
 ### Rendering and caching

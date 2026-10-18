@@ -1,6 +1,5 @@
 import type { Metadata } from 'next'
 import { draftMode } from 'next/headers'
-import { notFound } from 'next/navigation'
 
 import { buttonClass } from '@/components/CMSLink'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
@@ -9,9 +8,13 @@ import { RichText } from '@/components/RichText'
 import { Section } from '@/components/Section'
 import { hubCrumbs } from '@/lib/crumbs'
 import { formatDate, populated, todayISO } from '@/lib/format'
-import { getBySlug } from '@/lib/queries'
+import { getBySlug, getSiteSettings } from '@/lib/queries'
 import { pathFor } from '@/lib/urls'
 import type { Job } from '@/payload-types'
+import { routeMetadata } from '@/lib/metadata'
+import { redirectOrNotFound } from '@/lib/redirects'
+import { JsonLd } from '@/components/JsonLd'
+import * as jsonld from '@/lib/jsonld'
 
 type Props = { params: Promise<{ slug: string }> }
 
@@ -25,7 +28,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { isEnabled: draft } = await draftMode()
   const job = await getBySlug(draft, 'jobs', (await params).slug)
   if (!job) return {}
-  return { title: job.meta?.title || job.title, description: job.meta?.description ?? undefined }
+  return routeMetadata(draft, { title: job.title, path: pathFor('jobs', job)!, meta: job.meta })
 }
 
 const contractTypes: Record<NonNullable<Job['contractType']>, string> = {
@@ -37,8 +40,12 @@ const contractTypes: Record<NonNullable<Job['contractType']>, string> = {
 
 export default async function JobPage({ params }: Props) {
   const { isEnabled: draft } = await draftMode()
-  const job = await getBySlug(draft, 'jobs', (await params).slug)
-  if (!job) notFound()
+  const { slug } = await params
+  const [job, settings] = await Promise.all([
+    getBySlug(draft, 'jobs', slug),
+    getSiteSettings(draft),
+  ])
+  if (!job) return redirectOrNotFound(`/careers/${slug}/`)
   const office = populated(job.location)
   const closed = Boolean(job.closingDate && job.closingDate.slice(0, 10) < todayISO())
   const crumbs = await hubCrumbs(draft, [['/careers/', 'Careers']], {
@@ -54,6 +61,8 @@ export default async function JobPage({ params }: Props) {
   const apply = job.applyUrl || (job.applyEmail && `mailto:${job.applyEmail}`)
   return (
     <>
+      {/* A closed vacancy is no longer a job offer: no JobPosting (Google's guidance). */}
+      {!closed && <JsonLd data={[jsonld.jobPosting(job, settings)]} />}
       <Breadcrumbs items={crumbs} />
       <PageHeader title={job.title}>
         <dl className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-2">

@@ -530,7 +530,8 @@ export async function seedContent(payload: Payload): Promise<void> {
         organisationName: 'Novare',
         defaultOgImage: heroImage.id,
         defaultDisclaimer: richText(TODO('default disclaimer')),
-        organization: { legalName: TODO('legal name'), foundingYear: 2000 },
+        // No founding year: it would be an invented fact (it feeds Organization JSON-LD).
+        organization: { legalName: TODO('legal name') },
       },
     })
   log('globals')
