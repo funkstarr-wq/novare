@@ -77,7 +77,9 @@ decision. Tick them in this file as they are done.
 
 - [ ] **Redirects and the old-URL crawl** (M6). Deferred until the site is final: build
       `docs/redirects.csv`, import it, and crawl the old site's URLs (decision M7 §9).
-- [ ] **Content import from WordPress** (M6). Needs network access to novare.com.
+- [ ] **Final content import** (M6): freeze the old site, re-run the import on production
+      (`WORDPRESS_IMPORT=true`), then work through `docs/migration-report.md` (alt texts, authors,
+      awards, office details, legal texts).
 - [ ] **AI editor manual check on staging with the real key** (M5).
 - [ ] **No TODO-CONTENT in published content:** `pnpm check:content` passes on production.
 - [ ] **Lighthouse on staging:** LCP < 2.0 s on mobile (the CI gate is 2.5 s, M3/PR #5).

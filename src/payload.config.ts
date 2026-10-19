@@ -37,6 +37,7 @@ import { routeSubmission } from './hooks/formSubmissions'
 import { retentionTask } from './jobs/retention'
 import { emailAdapter } from './lib/email'
 import { linkableCollections } from './fields/link'
+import { withSourceUrl } from './fields/sourceUrl'
 import { revalidateRedirect, revalidateRedirectDelete } from './hooks/revalidate'
 import { previewURL } from './lib/preview'
 import { pathFor } from './lib/urls'
@@ -98,9 +99,11 @@ export default buildConfig({
       PressMentions,
       Research,
       LegalDocuments,
-    ].map(withContentRules),
-    Media,
-    Documents,
+    ]
+      .map(withSourceUrl)
+      .map(withContentRules),
+    withSourceUrl(Media),
+    withSourceUrl(Documents),
     Users,
     AiChangesets,
     AuditLog,

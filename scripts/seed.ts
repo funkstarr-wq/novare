@@ -1,10 +1,13 @@
 /**
  * Dev seed data. Run with `pnpm seed` (`payload run` loads .env and the Payload config).
- * Railway runs it after migrations on every deploy; it only acts in PR environments.
+ * Railway runs it after migrations on every deploy; it only acts in PR environments, and runs
+ * the WordPress import when WORDPRESS_IMPORT=true.
  */
 import { getPayload } from 'payload'
 
 import { runSeed, seedSkipReason } from '../src/lib/seed'
+import { WordPressClient } from '../src/migration/wordpress/client'
+import { importWordPress, reportMarkdown } from '../src/migration/wordpress/import'
 import config from '../src/payload.config'
 
 const skipReason = seedSkipReason(process.env)
@@ -14,6 +17,16 @@ if (skipReason) {
 } else {
   const payload = await getPayload({ config })
   await runSeed(payload, process.env)
+}
+
+// The WordPress import (M6), when asked for: Railway's pre-deploy step can reach both the
+// database and the old site. Idempotent, so leaving the flag on only repeats the same upserts.
+if (process.env.WORDPRESS_IMPORT === 'true') {
+  const payload = await getPayload({ config })
+  const report = await importWordPress(payload, {
+    client: new WordPressClient(process.env.WORDPRESS_URL || 'https://novare.com'),
+  })
+  console.log(reportMarkdown(report))
 }
 
 process.exit(0)
