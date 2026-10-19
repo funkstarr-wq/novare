@@ -108,13 +108,15 @@ describe('POST /api/submit-form/', () => {
     expect((await submissionsFor()).totalDocs).toBe(before)
   })
 
+  // Each change is made when its test runs: a token made while the file loads would be older
+  // than the minimum fill time once Payload has started.
   it.each([
-    [{ token: issueFormToken(Date.now()) }, /quick/],
-    [{ token: 'forged.token' }, /expired/],
-    [{ submissionData: fields({ popiaConsent: 'false' }) }, /must be ticked/],
-    [{ submissionData: fields({ email: 'nope' }) }, /email address/],
-  ])('refuses %j', async (change, error) => {
-    const { status, body } = await post(valid(change))
+    ['a token issued just now', () => ({ token: issueFormToken(Date.now()) }), /quick/],
+    ['a forged token', () => ({ token: 'forged.token' }), /expired/],
+    ['no consent', () => ({ submissionData: fields({ popiaConsent: 'false' }) }), /must be ticked/],
+    ['a bad email address', () => ({ submissionData: fields({ email: 'nope' }) }), /email address/],
+  ])('refuses %s', async (_case, change, error) => {
+    const { status, body } = await post(valid(change()))
     expect(status).toBe(400)
     expect(String(body.error)).toMatch(error)
   })
