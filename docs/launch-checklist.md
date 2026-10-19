@@ -75,11 +75,14 @@ decision. Tick them in this file as they are done.
 
 ## Before go-live (from earlier milestones)
 
-- [ ] **Redirects and the old-URL crawl** (M6). Deferred until the site is final: build
-      `docs/redirects.csv`, import it, and crawl the old site's URLs (decision M7 §9).
+The order and the cutover itself are in [`launch-runbook.md`](launch-runbook.md) (M8).
+
+- [ ] **Redirects and the old-URL crawl** (M6). Deferred until the site is final: complete
+      `docs/redirects.csv` (the runbook lists the old URLs still without a target), import it,
+      and run `pnpm check:urls` until every old URL passes (decision M7 §9).
 - [ ] **Final content import** (M6): freeze the old site, re-run the import on production
-      (`WORDPRESS_IMPORT=true`), then work through `docs/migration-report.md` (alt texts, authors,
-      awards, office details, legal texts).
+      (`WORDPRESS_IMPORT=true`; it only adds what is new), then work through the report (alt
+      texts, authors, awards, office details, legal texts).
 - [ ] **AI editor manual check on staging with the real key** (M5).
 - [ ] **No TODO-CONTENT in published content:** `pnpm check:content` passes on production.
 - [ ] **Lighthouse on staging:** LCP < 2.0 s on mobile (the CI gate is 2.5 s, M3/PR #5).
