@@ -22,6 +22,7 @@ owner's request. The checklist is `docs/launch-checklist.md`.
    The admin also allows `cdn.jsdelivr.net`, where Payload's code editor (Monaco) loads from.
    Next.js's experimental SRI is not used: it is experimental and does not cover the inline
    scripts.
+
 2. **HSTS:** one year, this host only, with no `includeSubDomains` or preload. Other
    novare.com subdomains are not this project's to commit to HTTPS. Revisit at launch.
 3. **Forms** (brief §9):
