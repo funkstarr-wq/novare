@@ -54,6 +54,9 @@ export default buildConfig({
   csrf: serverURL ? [serverURL] : [],
   admin: {
     user: Users.slug,
+    // Payload's own avatar, not Gravatar: no staff email hashes go to a third party, and the
+    // admin's CSP stays on this origin (M7).
+    avatar: 'default',
     importMap: {
       baseDir: path.resolve(dirname),
     },

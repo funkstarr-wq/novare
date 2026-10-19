@@ -88,13 +88,17 @@ test.describe('navigation', () => {
 
 test.describe('forms and search', () => {
   test('the contact form sends a submission and shows the confirmation', async ({ page }) => {
+    const token = page.waitForResponse((response) => response.url().includes('/api/form-token/'))
     await page.goto('/contact/')
+    await token
     const form = page.locator('#contact-form form')
     await form.getByLabel('Name').fill('E2E Visitor')
     await form.getByLabel('Email').fill('visitor@example.test')
     await form.getByRole('combobox').selectOption({ index: 1 })
     await form.getByLabel('Message').fill('Sent by the end-to-end tests.')
     await form.getByRole('checkbox').check()
+    // The time-to-submit check (M7) refuses forms sent within two seconds of loading.
+    await page.waitForTimeout(2_100)
     await form.getByRole('button').click()
     await expect(page.locator('#contact-form [role="status"]')).toBeVisible()
   })

@@ -59,10 +59,10 @@ test.describe('contact form', () => {
   test.skip(!seeded, 'needs the seeded contact page (run `pnpm seed`)')
 
   test('sends an enquiry through the spam-checked endpoint', async ({ page }) => {
-    await page.goto('/contact/')
-    const form = page.locator('#contact-form form')
     const token = page.waitForResponse((response) => response.url().includes('/api/form-token/'))
+    await page.goto('/contact/')
     await token
+    const form = page.locator('#contact-form form')
     await form.getByLabel('Name').fill('E2E Visitor')
     await form.getByLabel('Email').fill('e2e-visitor@example.test')
     await form.getByLabel('Topic').selectOption({ index: 1 })
