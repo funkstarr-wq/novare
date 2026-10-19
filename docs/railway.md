@@ -61,6 +61,10 @@ through reference variables (`S3_BUCKET=${{media.BUCKET}}`, `S3_ENDPOINT=${{medi
    assistant refuses every request, so PR environments (which copy staging's variables) should
    not get the key: mark it as not shared with PR environments, or leave it off staging until
    the manual test. Never set `AI_MOCK` on Railway; it is ignored there anyway.
+10. **Hardening (M7).** Email, Turnstile, routing, alerts and the backup restore test are in
+    `docs/launch-checklist.md`. The variables are `RESEND_API_KEY`, `EMAIL_FROM`,
+    `NEXT_PUBLIC_TURNSTILE_SITE_KEY` (needed at build time), `TURNSTILE_SECRET_KEY`, optionally
+    `CRM_WEBHOOK_URL` and `CRM_WEBHOOK_SECRET`, and `FORM_RETENTION_MONTHS`.
 
 ## Checking a deploy
 

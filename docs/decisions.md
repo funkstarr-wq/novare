@@ -4,6 +4,70 @@ A running log of choices made during the build, newest milestone first. Deviatio
 [`BUILD_BRIEF.md`](BUILD_BRIEF.md) are marked **Deviation** and flagged in the milestone's PR.
 Open items that need an answer from Novare or the agency are marked **Needs decision**.
 
+## M7 — Hardening (2026-10-19)
+
+M6 (content migration) is paused: this environment cannot reach novare.com. M7 came first, at the
+owner's request. The checklist is `docs/launch-checklist.md`.
+
+1. **CSP without nonces.** **Deviation:** the brief asks for a nonce-based CSP. Next.js only adds
+   nonces to pages rendered per request, which turns off the page cache (static rendering and
+   on-demand ISR) and works against the performance budgets (Next.js CSP guide, "Static vs
+   Dynamic Rendering"). The policy follows the guide's "without nonces" form instead:
+   - scripts from the site only, plus Cloudflare Turnstile, with inline scripts allowed (Next.js
+     streams page data in inline scripts);
+   - `object-src 'none'`, `base-uri 'self'`, `form-action 'self'`, and `frame-ancestors 'self'`
+     (live preview frames the site from the admin);
+   - `upgrade-insecure-requests` on HTTPS.
+
+   The admin also allows `cdn.jsdelivr.net`, where Payload's code editor (Monaco) loads from.
+   Next.js's experimental SRI is not used: it is experimental and does not cover the inline
+   scripts.
+2. **HSTS:** one year, this host only, with no `includeSubDomains` or preload. Other
+   novare.com subdomains are not this project's to commit to HTTPS. Revisit at launch.
+3. **Forms** (brief §9):
+   - **One way in.** Submissions arrive only through `POST /api/submit-form/`. Payload's own
+     create is closed (`create: nobody`).
+   - **Checks, in order:** a rate limit of 5 per IP per 10 minutes; a honeypot (a filled one
+     gets a fake "ok" and nothing is stored); a signed time token (`GET /api/form-token/`,
+     fetched by the browser because pages are cached), which refuses forms sent within
+     2 seconds or older than 24 hours; Turnstile, when `TURNSTILE_SECRET_KEY` is set; then
+     validation against the form's own fields.
+   - **What is stored.** Unknown fields are dropped. A consent record (given, wording shown,
+     time) is kept with each submission. IP addresses are not stored.
+4. **Routing:** each form has an "Enquiry routing" list (topic value → address, `*` for the
+   rest). The sender's confirmation is form-builder's own Emails setting. The CRM webhook
+   (`CRM_WEBHOOK_URL`) gets the submission as JSON, signed with `CRM_WEBHOOK_SECRET`. Email and
+   webhook failures are logged and never lose the submission.
+5. **Email:** the official `@payloadcms/email-resend` adapter, used when `RESEND_API_KEY` and
+   `EMAIL_FROM` are set; otherwise Payload writes emails to the log.
+6. **Retention:** a Payload job (`delete-old-submissions`, queue `maintenance`) runs nightly at
+   03:00 UTC and deletes submissions older than `FORM_RETENTION_MONTHS` (default 12).
+   - The cron starts from `src/instrumentation.ts` when the server boots (Payload starts crons
+     only on request), never in CLI commands or the build. `PAYLOAD_JOBS=off` switches it off.
+   - The jobs collection is visible to admins under System.
+   - **The in-process rate limiter counts per server instance** and resets on deploy;
+     Cloudflare rate limiting is the outer layer.
+7. **Cookie consent:** a banner driven by site settings (off by default, wording TODO-CONTENT),
+   with Accept and Decline, a six-month first-party cookie, and "Cookie settings" in the footer
+   to change the choice. **There is no analytics yet** (brief §15). Whatever is chosen must
+   render inside `<ConsentGate>` and be added to the CSP; switch the banner on at the same
+   time. With no optional cookies, showing a banner would ask about nothing.
+8. **Error monitoring:** Railway logs rather than Sentry (no new paid account). Server errors
+   go to stderr as one JSON line each (`src/lib/monitoring.ts`), without query strings or
+   headers. Alerts for crashes and failed deploys are Railway webhooks (checklist).
+9. **Redirects deferred.** At the owner's request, redirects and the old-URL crawl wait until
+   the site is final and ready to go live. The work continues on the staging URL.
+10. **Dependencies:**
+    - sharp is upgraded to 0.35.5 (GHSA-wq5f-xc86-pv6w).
+    - **Ignored:** GHSA-vfj7-8cjw-p6xm (braces, high). It reaches us only through
+      `@payloadcms/next` → sass → chokidar, the build's file watcher, which never sees visitor
+      input, and there is no patched version. Remove the ignore when Payload's dependency
+      moves on.
+    - The moderate esbuild advisory (drizzle-kit, development server only) and the low
+      DOMPurify ones (the admin code editor) are below the CI gate.
+11. **Backups:** the restore test is a Railway dashboard action that replaces a service's live
+    data, so it is left to a person, on staging (checklist).
+
 ## M5 — AI editor (2026-10-18)
 
 The brief's §10 as built, in `src/ai/` (server only) and `src/admin/ai/` (admin UI).
