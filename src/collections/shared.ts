@@ -8,6 +8,7 @@ import {
   publishers,
   staff,
 } from '@/access'
+import { markAiChangesetsPublished } from '@/ai/apply'
 import { submitForReviewEndpoint } from '@/endpoints/submitForReview'
 import { reviewField } from '@/fields/review'
 import { approvalGuard, regulatedPageDeleteGuard } from '@/hooks/approvalGuard'
@@ -45,6 +46,20 @@ export function withContentRules(collection: CollectionConfig): CollectionConfig
 
   return {
     ...collection,
+    admin: {
+      ...collection.admin,
+      components: {
+        ...collection.admin?.components,
+        edit: {
+          ...collection.admin?.components?.edit,
+          // The AI editor's document panel (brief §10.2), next to Save and Publish.
+          beforeDocumentControls: [
+            ...(collection.admin?.components?.edit?.beforeDocumentControls ?? []),
+            '/admin/ai/DocumentAssistant#DocumentAssistant',
+          ],
+        },
+      },
+    },
     // `publishedOrStaff` checks the 2FA code itself, so the public can still read.
     custom: { ...collection.custom, ...publicOperations('read') },
     access: {
@@ -65,7 +80,12 @@ export function withContentRules(collection: CollectionConfig): CollectionConfig
       ...hooks,
       beforeChange: [...(hooks.beforeChange ?? []), approvalGuard(regulated)],
       beforeDelete: [...(hooks.beforeDelete ?? []), ...(isPages ? [regulatedPageDeleteGuard] : [])],
-      afterChange: [...(hooks.afterChange ?? []), auditAfterChange, revalidateAfterChange],
+      afterChange: [
+        ...(hooks.afterChange ?? []),
+        auditAfterChange,
+        revalidateAfterChange,
+        markAiChangesetsPublished,
+      ],
       afterDelete: [...(hooks.afterDelete ?? []), auditAfterDelete, revalidateAfterDelete],
     },
   }

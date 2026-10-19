@@ -4,6 +4,88 @@ A running log of choices made during the build, newest milestone first. Deviatio
 [`BUILD_BRIEF.md`](BUILD_BRIEF.md) are marked **Deviation** and flagged in the milestone's PR.
 Open items that need an answer from Novare or the agency are marked **Needs decision**.
 
+## M5 — AI editor (2026-10-18)
+
+The brief's §10 as built, in `src/ai/` (server only) and `src/admin/ai/` (admin UI).
+
+1. **Flow.** `POST /api/ai/plan/` runs a tool-use loop with Claude. Read tools run at once, as
+   the requesting user. Write tools never run: each one is validated and applied to an
+   in-memory copy of the document's latest draft, so later proposals see earlier ones and the
+   person gets a field-level diff. The result is an `ai-changesets` record with status
+   `proposed`. `POST /api/ai/apply/` replays the accepted proposals on fresh drafts and saves
+   them through the Local API as that user (`overrideAccess: false`), in one transaction, with
+   `source: ai` in the audit log. Publishing is the normal admin publish; a hook then marks the
+   changeset `published` once every document it changed has been published. `POST
+/api/ai/rollback/` restores each document's version from before the changeset as a new
+   draft. `discard` rejects a proposal. All of them need a staff session verified with 2FA.
+2. **Model and API use.** `claude-sonnet-5-5` (the brief's default, from `ANTHROPIC_MODEL` or
+   AI settings) with adaptive thinking at `medium` effort, streamed, with prompt caching on the
+   fixed system prompt and tool list. The server-side refusal fallback (`fallbacks: "default"`,
+   beta `server-side-fallback-2026-07-01`) is on for models that support it; a refusal that
+   still comes back ends the plan with a message. Forced tool choice is not used (Sonnet 5.5
+   rejects it). The claims classifier is `claude-haiku-5-5` (`ANTHROPIC_CLASSIFIER_MODEL`).
+   At most 12 model turns and 50 write proposals per request.
+3. **What the assistant may touch** (`src/ai/whitelist.ts`): an editable field list per
+   collection. Never: FSP licence numbers, disclaimers, the review group, the `regulated`
+   switch, relationships to users, page parents and anything on legal documents (read-only).
+   **Slugs (and a survey's year) only until the document is first published**, because a live
+   URL change needs a redirect (§14 rule 8). Page sections go through the block tools.
+4. **Schemas from the config.** The zod schema for every write is generated from the Payload
+   field config (`src/ai/schema.ts`): types, selects, lengths, min/max, block types, array
+   limits, unknown keys rejected. Invalid proposals go back to the model as tool errors and are
+   stored as failed operations; they are never applied.
+5. **Rich text** is the Markdown subset (paragraphs, `##`–`####`, lists, links, bold, italic),
+   converted with Payload's own `convertMarkdownToLexical`. Anything else (HTML, images, code,
+   tables, quotes, `javascript:` links, h1) is rejected before conversion, and the converted
+   tree is checked again. Documents are shown to the model as Markdown the same way.
+6. **Financial claims.** Every string a proposal writes is checked against built-in patterns
+   (percentages near return/yield/growth, "guaranteed", "risk-free", "outperform", "beat the
+   market", currency amounts) plus `ai-settings.regulatedPhrases`, and by one Haiku call per
+   plan over all the text. Either one flags the changeset. The classifier fails closed: no
+   clear answer counts as a flag. On apply, **regulated documents always go to compliance
+   review** (status "in review" and the usual email). **A flagged claim on any other document
+   blocks publishing by anyone but compliance or an admin**, enforced in the approval guard
+   until compliance publishes it or the change is rolled back. Many collections have no review
+   group, so this is how "forces `in_review`" works for them. **Deviation (interpretation)**,
+   flagged in the PR.
+7. **Archiving** (`archive_document`) unpublishes a live document; there is no delete tool and
+   no schema change for an `archived` flag. Applying an archive needs publishing rights for that
+   document. Rollback leaves it unpublished and says so. **Deviation (interpretation).**
+8. **Budget and rate limit.** Cost is computed from token usage with list prices
+   (`src/ai/pricing.ts`; unknown models cost at the highest rate) and stored per changeset. A
+   plan is refused when this month's spend (UTC) has reached the budget, after 30 plans by the
+   same person in an hour, **and when no budget is set at all** (fail closed:
+   `AI_MONTHLY_BUDGET_USD` or AI settings). One plan can overshoot the remaining budget by its
+   own cost; the turn and proposal caps bound that. The panel shows the budget left.
+9. **Data minimisation and injection.** The model only sees document content, media alt text and
+   file names, the page tree and counts, and the user's roles (not their name or email). Users, form submissions,
+   the audit log, settings and secrets never leave the server. Document data arrives inside
+   `<document_data>` tags, and the system prompt says it is data, not instructions.
+10. **Conversation.** A follow-up message continues the same conversation (stored in full on the
+    changeset, append-only, so thinking blocks replay unchanged). The new changeset carries the
+    earlier proposals forward and the old one is marked `rejected` (`supersededBy`). A
+    conversation over 400 kB is not stored in full and cannot be continued.
+11. **UI.** "AI assistant" sits next to Save/Publish on every public collection (a drawer with
+    the panel), and `/admin/assistant/` has the site-wide panel plus the user's history with
+    rollback. Closing the drawer after applying reloads the editor, so its form cannot autosave
+    stale values over the AI's draft. "Open live preview" is the same preview link the admin's
+    own live preview uses.
+12. **Tests.** Unit tests cover the whitelist, schemas, Markdown conversion, the claims detector
+    and pricing. Integration tests replay recorded tool calls through a mock client (plan →
+    apply → publish, contributor cannot publish, regulated review, flagged claims, budget and
+    switch-off refusals, rollback). The e2e test runs against `AI_MOCK=1`, a scripted model in
+    `src/ai/mock.ts` that the server uses instead of the API. It is ignored whenever
+    `RAILWAY_ENVIRONMENT_NAME` is set, so a deployed site always uses the real API. CI sets it
+    for the e2e job.
+13. **Payload quirks.** On a draft restore Payload passes the restored version's `_status` to
+    `afterChange` and leaves `isRestoringVersion` on the request. The publish hook skips
+    restores, and rollback clears the flag before its next write. The audit log still records a
+    rollback's restore as "publish" (an existing M2 hook reads `_status`). **Needs decision:**
+    fix that in the audit hook, or accept it.
+14. **Manual check (the brief's "done when").** Still to do on staging with a real key: set
+    `ANTHROPIC_API_KEY` and `AI_MONTHLY_BUDGET_USD`, tick AI settings → Enabled, and change a
+    page by prompt end to end. A typical request should cost a few US cents; the history shows each one's cost.
+
 ## M4 — SEO layer (2026-10-18)
 
 1. **One metadata helper for every route** (`pageMetadata` in `src/lib/seo.ts`, used through

@@ -121,6 +121,8 @@ jobs:
     env:
       DATABASE_URL: postgres://postgres:postgres@localhost:5432/novare_test
       PAYLOAD_DB_PUSH: 'false'
+      # The AI editor tests use the scripted model: no API key, no cost (src/ai/mock.ts).
+      AI_MOCK: '1'
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup

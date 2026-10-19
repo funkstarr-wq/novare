@@ -6,6 +6,7 @@ import {
 } from 'payload'
 
 import { canApprove, canPublish, isRegulatedDocument } from '@/access'
+import { hasFlaggedChangeset } from '@/ai/apply'
 import type { RoleUser } from '@/access/roles'
 import type { ReviewStatus } from '@/fields/review'
 import { stableStringify } from '@/lib/stableStringify'
@@ -46,7 +47,7 @@ export function contentChanged(data: Doc, original: Doc | undefined): boolean {
  */
 export const approvalGuard =
   (collectionRegulated: boolean): CollectionBeforeChangeHook =>
-  ({ data, originalDoc, req }) => {
+  async ({ collection, data, originalDoc, req }) => {
     const user = req.user as RoleUser
     if (!user) return data
 
@@ -59,6 +60,21 @@ export const approvalGuard =
     if (publishing && regulated && !canApprove(user)) {
       throw new APIError(
         'This is regulated content: it needs compliance approval. Submit it for compliance review instead of publishing.',
+        403,
+        undefined,
+        true,
+      )
+    }
+    // An AI change that may contain a financial claim needs compliance, whatever the document
+    // (brief §10.7). The flag clears when compliance publishes it or the change is rolled back.
+    if (
+      publishing &&
+      !canApprove(user) &&
+      originalDoc?.id !== undefined &&
+      (await hasFlaggedChangeset(req, collection.slug, originalDoc.id as number))
+    ) {
+      throw new APIError(
+        'An AI change to this document may contain a financial claim: compliance needs to approve and publish it.',
         403,
         undefined,
         true,
