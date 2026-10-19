@@ -8,7 +8,7 @@ import type { ContactFormBlock } from '@/payload-types'
 import { type FormField, FormClient } from './FormClient'
 import type { SectionProps } from './types'
 
-/** A form-builder form (brief §9). Spam protection and consent logging arrive in M7. */
+/** A form-builder form (brief §9), sent through the spam-checked endpoint. */
 export async function ContactForm({ block, draft }: SectionProps<ContactFormBlock>) {
   const form = populated(block.form)
   if (!form) return null

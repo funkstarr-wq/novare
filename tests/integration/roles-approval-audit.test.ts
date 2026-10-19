@@ -532,7 +532,7 @@ describe('two-factor authentication (brief §6.1)', () => {
     ).resolves.toBeDefined()
   })
 
-  it('still lets visitors send a form', async () => {
+  it('only takes submissions through the spam-checked endpoint (M7)', async () => {
     const form = track(
       'forms',
       await payload.create({
@@ -545,12 +545,13 @@ describe('two-factor authentication (brief §6.1)', () => {
         },
       }),
     )
-    const submission = await payload.create({
-      collection: 'form-submissions',
-      data: { form: form.id, submissionData: [{ field: 'name', value: 'Visitor' }] },
-      overrideAccess: false,
-    })
-    track('form-submissions', submission)
-    expect(submission.id).toBeDefined()
+    // /api/submit-form/ creates them with access overridden (tests/integration/forms.test.ts).
+    await expect(
+      payload.create({
+        collection: 'form-submissions',
+        data: { form: form.id, submissionData: [{ field: 'name', value: 'Visitor' }] },
+        overrideAccess: false,
+      }),
+    ).rejects.toThrow(/not allowed/i)
   })
 })

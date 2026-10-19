@@ -90,6 +90,7 @@ export interface Config {
     'form-submissions': FormSubmission;
     'totp-attempts': TotpAttempt;
     'payload-kv': PayloadKv;
+    'payload-jobs': PayloadJob;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
     'payload-migrations': PayloadMigration;
@@ -119,6 +120,7 @@ export interface Config {
     'form-submissions': FormSubmissionsSelect<false> | FormSubmissionsSelect<true>;
     'totp-attempts': TotpAttemptsSelect<false> | TotpAttemptsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
+    'payload-jobs': PayloadJobsSelect<false> | PayloadJobsSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
     'payload-migrations': PayloadMigrationsSelect<false> | PayloadMigrationsSelect<true>;
@@ -132,12 +134,14 @@ export interface Config {
     footer: Footer;
     'site-settings': SiteSetting;
     'ai-settings': AiSetting;
+    'payload-jobs-stats': PayloadJobsStat;
   };
   globalsSelect: {
     header: HeaderSelect<false> | HeaderSelect<true>;
     footer: FooterSelect<false> | FooterSelect<true>;
     'site-settings': SiteSettingsSelect<false> | SiteSettingsSelect<true>;
     'ai-settings': AiSettingsSelect<false> | AiSettingsSelect<true>;
+    'payload-jobs-stats': PayloadJobsStatsSelect<false> | PayloadJobsStatsSelect<true>;
   };
   locale: 'en';
   widgets: {
@@ -145,7 +149,13 @@ export interface Config {
   };
   user: User;
   jobs: {
-    tasks: unknown;
+    tasks: {
+      'delete-old-submissions': TaskDeleteOldSubmissions;
+      inline: {
+        input: unknown;
+        output: unknown;
+      };
+    };
     workflows: unknown;
   };
 }
@@ -254,6 +264,7 @@ export interface Media {
    * Describe the image for people who cannot see it.
    */
   alt: string;
+  sourceUrl?: string | null;
   prefix?: string | null;
   _objectKey?: string | null;
   updatedAt: string;
@@ -777,6 +788,7 @@ export interface Document {
    * Person or team responsible for keeping this document current.
    */
   owner?: string | null;
+  sourceUrl?: string | null;
   prefix?: string | null;
   _objectKey?: string | null;
   updatedAt: string;
@@ -804,6 +816,7 @@ export interface Award {
   fund?: (number | null) | Fund;
   solution?: (number | null) | Solution;
   description?: string | null;
+  sourceUrl?: string | null;
   updatedAt: string;
   createdAt: string;
   _status?: ('draft' | 'published') | null;
@@ -1120,6 +1133,16 @@ export interface Form {
         id?: string | null;
       }[]
     | null;
+  /**
+   * Who receives each enquiry, by topic: use the value of an option in the "topic" field, or * for any topic without its own entry. The sender’s confirmation email is set under Emails.
+   */
+  routing?:
+    | {
+        topic: string;
+        emailTo: string;
+        id?: string | null;
+      }[]
+    | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -1265,6 +1288,7 @@ export interface Insight {
   publishedAt?: string | null;
   author?: (number | null) | Person;
   category?: (number | null) | Category;
+  sourceUrl?: string | null;
   updatedAt: string;
   createdAt: string;
   _status?: ('draft' | 'published') | null;
@@ -1370,6 +1394,7 @@ export interface Job {
    */
   generateSlug?: boolean | null;
   slug: string;
+  sourceUrl?: string | null;
   updatedAt: string;
   createdAt: string;
   _status?: ('draft' | 'published') | null;
@@ -1414,6 +1439,7 @@ export interface Office {
   countrySlug?: string | null;
   isHeadOffice?: boolean | null;
   order?: number | null;
+  sourceUrl?: string | null;
   updatedAt: string;
   createdAt: string;
   _status?: ('draft' | 'published') | null;
@@ -1462,6 +1488,7 @@ export interface LegalDocument {
   slug: string;
   versionDate?: string | null;
   owner?: string | null;
+  sourceUrl?: string | null;
   review?: Review;
   updatedAt: string;
   createdAt: string;
@@ -1485,6 +1512,7 @@ export interface PressMention {
    */
   excerpt?: string | null;
   people?: (number | Person)[] | null;
+  sourceUrl?: string | null;
   updatedAt: string;
   createdAt: string;
   _status?: ('draft' | 'published') | null;
@@ -1645,6 +1673,11 @@ export interface FormSubmission {
         id?: string | null;
       }[]
     | null;
+  consent?: {
+    given?: boolean | null;
+    text?: string | null;
+    at?: string | null;
+  };
   updatedAt: string;
   createdAt: string;
 }
@@ -1673,6 +1706,107 @@ export interface PayloadKv {
     | number
     | boolean
     | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "payload-jobs".
+ */
+export interface PayloadJob {
+  id: number;
+  /**
+   * Input data provided to the job
+   */
+  input?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  taskStatus?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  completedAt?: string | null;
+  totalTried?: number | null;
+  /**
+   * If hasError is true this job will not be retried
+   */
+  hasError?: boolean | null;
+  /**
+   * If hasError is true, this is the error that caused it
+   */
+  error?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  /**
+   * Task execution log
+   */
+  log?:
+    | {
+        executedAt: string;
+        completedAt: string;
+        taskSlug: 'inline' | 'delete-old-submissions';
+        taskID: string;
+        input?:
+          | {
+              [k: string]: unknown;
+            }
+          | unknown[]
+          | string
+          | number
+          | boolean
+          | null;
+        output?:
+          | {
+              [k: string]: unknown;
+            }
+          | unknown[]
+          | string
+          | number
+          | boolean
+          | null;
+        state: 'failed' | 'succeeded';
+        error?:
+          | {
+              [k: string]: unknown;
+            }
+          | unknown[]
+          | string
+          | number
+          | boolean
+          | null;
+        id?: string | null;
+      }[]
+    | null;
+  taskSlug?: ('inline' | 'delete-old-submissions') | null;
+  queue?: string | null;
+  waitUntil?: string | null;
+  processing?: boolean | null;
+  meta?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  updatedAt: string;
+  createdAt: string;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -2300,6 +2434,7 @@ export interface OfficesSelect<T extends boolean = true> {
   countrySlug?: T;
   isHeadOffice?: T;
   order?: T;
+  sourceUrl?: T;
   updatedAt?: T;
   createdAt?: T;
   _status?: T;
@@ -2316,6 +2451,7 @@ export interface AwardsSelect<T extends boolean = true> {
   fund?: T;
   solution?: T;
   description?: T;
+  sourceUrl?: T;
   updatedAt?: T;
   createdAt?: T;
   _status?: T;
@@ -2343,6 +2479,7 @@ export interface JobsSelect<T extends boolean = true> {
       };
   generateSlug?: T;
   slug?: T;
+  sourceUrl?: T;
   updatedAt?: T;
   createdAt?: T;
   _status?: T;
@@ -2370,6 +2507,7 @@ export interface InsightsSelect<T extends boolean = true> {
   publishedAt?: T;
   author?: T;
   category?: T;
+  sourceUrl?: T;
   updatedAt?: T;
   createdAt?: T;
   _status?: T;
@@ -2407,6 +2545,7 @@ export interface PressMentionsSelect<T extends boolean = true> {
   thumbnail?: T;
   excerpt?: T;
   people?: T;
+  sourceUrl?: T;
   updatedAt?: T;
   createdAt?: T;
   _status?: T;
@@ -2461,6 +2600,7 @@ export interface LegalDocumentsSelect<T extends boolean = true> {
   slug?: T;
   versionDate?: T;
   owner?: T;
+  sourceUrl?: T;
   review?: T | ReviewSelect<T>;
   updatedAt?: T;
   createdAt?: T;
@@ -2472,6 +2612,7 @@ export interface LegalDocumentsSelect<T extends boolean = true> {
  */
 export interface MediaSelect<T extends boolean = true> {
   alt?: T;
+  sourceUrl?: T;
   prefix?: T;
   _objectKey?: T;
   updatedAt?: T;
@@ -2549,6 +2690,7 @@ export interface DocumentsSelect<T extends boolean = true> {
   type?: T;
   versionDate?: T;
   owner?: T;
+  sourceUrl?: T;
   prefix?: T;
   _objectKey?: T;
   updatedAt?: T;
@@ -2761,6 +2903,13 @@ export interface FormsSelect<T extends boolean = true> {
         message?: T;
         id?: T;
       };
+  routing?:
+    | T
+    | {
+        topic?: T;
+        emailTo?: T;
+        id?: T;
+      };
   updatedAt?: T;
   createdAt?: T;
 }
@@ -2776,6 +2925,13 @@ export interface FormSubmissionsSelect<T extends boolean = true> {
         field?: T;
         value?: T;
         id?: T;
+      };
+  consent?:
+    | T
+    | {
+        given?: T;
+        text?: T;
+        at?: T;
       };
   updatedAt?: T;
   createdAt?: T;
@@ -2796,6 +2952,38 @@ export interface TotpAttemptsSelect<T extends boolean = true> {
 export interface PayloadKvSelect<T extends boolean = true> {
   key?: T;
   data?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "payload-jobs_select".
+ */
+export interface PayloadJobsSelect<T extends boolean = true> {
+  input?: T;
+  taskStatus?: T;
+  completedAt?: T;
+  totalTried?: T;
+  hasError?: T;
+  error?: T;
+  log?:
+    | T
+    | {
+        executedAt?: T;
+        completedAt?: T;
+        taskSlug?: T;
+        taskID?: T;
+        input?: T;
+        output?: T;
+        state?: T;
+        error?: T;
+        id?: T;
+      };
+  taskSlug?: T;
+  queue?: T;
+  waitUntil?: T;
+  processing?: T;
+  meta?: T;
+  updatedAt?: T;
+  createdAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -2927,6 +3115,17 @@ export interface SiteSetting {
         }[]
       | null;
   };
+  /**
+   * Asks visitors before any analytics cookie is set (brief §12). Switch it on together with analytics; the site sets no other optional cookies.
+   */
+  cookieBanner?: {
+    enabled?: boolean | null;
+    /**
+     * POPIA/GDPR wording, from Novare.
+     */
+    message?: string | null;
+    policy?: (number | null) | LegalDocument;
+  };
   updatedAt?: string | null;
   createdAt?: string | null;
 }
@@ -2959,6 +3158,24 @@ export interface AiSetting {
    * Admin only. Appended to the AI editor system prompt.
    */
   systemPromptAddendum?: string | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "payload-jobs-stats".
+ */
+export interface PayloadJobsStat {
+  id: number;
+  stats?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
   updatedAt?: string | null;
   createdAt?: string | null;
 }
@@ -3035,6 +3252,13 @@ export interface SiteSettingsSelect<T extends boolean = true> {
               id?: T;
             };
       };
+  cookieBanner?:
+    | T
+    | {
+        enabled?: T;
+        message?: T;
+        policy?: T;
+      };
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;
@@ -3061,6 +3285,16 @@ export interface AiSettingsSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "payload-jobs-stats_select".
+ */
+export interface PayloadJobsStatsSelect<T extends boolean = true> {
+  stats?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "collections_widget".
  */
 export interface CollectionsWidget {
@@ -3068,6 +3302,17 @@ export interface CollectionsWidget {
     [k: string]: unknown;
   };
   width: 'full';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TaskDelete-old-submissions".
+ */
+export interface TaskDeleteOldSubmissions {
+  input?: unknown;
+  output: {
+    deleted: number;
+    cutoff: string;
+  };
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

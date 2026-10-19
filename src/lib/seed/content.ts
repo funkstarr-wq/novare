@@ -308,6 +308,17 @@ export async function seedContent(payload: Payload): Promise<void> {
           {
             title,
             submitButtonLabel: 'Send',
+            // Example addresses only: Novare sets the real routing per form.
+            routing: [{ topic: '*', emailTo: 'enquiries@example.test' }],
+            emails: [
+              {
+                emailTo: '{{email}}',
+                subject: 'We have received your enquiry',
+                message: richText(
+                  'Thank you for contacting Novare. We have received your message.',
+                ),
+              },
+            ],
             confirmationType: 'message',
             confirmationMessage: richText('Thank you. We will be in touch.'),
             fields: [
@@ -532,6 +543,12 @@ export async function seedContent(payload: Payload): Promise<void> {
         defaultDisclaimer: richText(TODO('default disclaimer')),
         // No founding year: it would be an invented fact (it feeds Organization JSON-LD).
         organization: { legalName: TODO('legal name') },
+        // Off until analytics is chosen (brief §15); the wording comes from Novare.
+        cookieBanner: {
+          enabled: false,
+          message: TODO('cookie banner wording (POPIA/GDPR)'),
+          policy: privacy.id,
+        },
       },
     })
   log('globals')

@@ -1,6 +1,7 @@
 import NextLink from 'next/link'
 
 import { CMSLink } from '@/components/CMSLink'
+import { CookieSettingsButton } from '@/components/layout/CookieBannerClient'
 import { populated } from '@/lib/format'
 import { getFooter, getSiteSettings } from '@/lib/queries'
 import { pathFor } from '@/lib/urls'
@@ -22,6 +23,7 @@ export async function Footer({ draft }: { draft: boolean }) {
     return item && href ? [{ label: item.title, href }] : []
   })
   const offices = (footer.offices ?? []).flatMap((office) => populated(office) ?? [])
+  const cookieSettings = Boolean(settings.cookieBanner?.enabled && settings.cookieBanner.message)
 
   return (
     <footer className="mt-auto border-t border-border bg-surface-muted">
@@ -67,7 +69,7 @@ export async function Footer({ draft }: { draft: boolean }) {
           <p>
             © {new Date().getFullYear()} {settings.organisationName}
           </p>
-          {legal.length > 0 && (
+          {(legal.length > 0 || cookieSettings) && (
             <nav aria-label="Legal">
               <ul className="flex flex-wrap gap-4">
                 {legal.map((item) => (
@@ -77,6 +79,11 @@ export async function Footer({ draft }: { draft: boolean }) {
                     </NextLink>
                   </li>
                 ))}
+                {cookieSettings && (
+                  <li>
+                    <CookieSettingsButton />
+                  </li>
+                )}
               </ul>
             </nav>
           )}

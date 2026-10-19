@@ -4,6 +4,120 @@ A running log of choices made during the build, newest milestone first. Deviatio
 [`BUILD_BRIEF.md`](BUILD_BRIEF.md) are marked **Deviation** and flagged in the milestone's PR.
 Open items that need an answer from Novare or the agency are marked **Needs decision**.
 
+## M6 — Content migration (2026-10-19)
+
+The content import from the old WordPress site (brief §11). Redirects and the old-URL crawl are
+deferred to go-live (decision M7 §9); the import's URL map in `docs/migration-report.md` is their
+starting point.
+
+1. **How it runs.** `src/migration/wordpress/` reads the public REST API and the old site's
+   pages, and writes through the Local API.
+   - **Idempotent:** it upserts by a hidden `sourceUrl` field (new on the imported collections,
+     with a migration) and never deletes, so the final import before launch re-runs it.
+   - **Locally:** `MIGRATION_REPORT=docs/migration-report.md pnpm import:wp`.
+   - **On Railway:** set `WORDPRESS_IMPORT=true`; the pre-deploy step (`pnpm seed`) then runs it
+     next to the database and its bucket. No database port is opened to the outside.
+2. **Insights:** the 25 posts, minus the vacancy and the duplicate HedgeNews post (its `-2`
+   slug, listed in the URL map), plus **11 articles the old site published as pages** (Wealth &
+   Invest insights, found through the old site's insight listing pages).
+   - **Deviation (scope):** the brief only mentions posts. These are articles too, and their
+     URLs move to `/insights/<slug>/`, like the posts'. Flagged in the PR.
+   - Slugs are kept. The publication date comes from WordPress. The "news" category maps to a
+     News category.
+   - A page article's opening heading repeats its title, so it is dropped.
+3. **HTML → Lexical:** Payload's own `convertHTMLToLexical` (with `jsdom`), after cleaning:
+   page-builder wrappers, scripts, styles, figures, images and shortcodes go; h1 becomes h2 and
+   h5–h6 become h4. The result is held to the editors' subset (no tables; bold and italic only).
+4. **Images:** posts have no featured images on the old site, so **an article's first image
+   becomes its hero image**; further images in the text are left out (10 articles had more than
+   one). Press thumbnails are imported too. **Every imported image's alt text is TODO-CONTENT**:
+   the old site's alt texts are file names.
+5. **Press mentions:** 47, from the articles page.
+   - Headline, link, and the outlet as its domain (an outlet name would be a guess).
+   - Thumbnail image.
+   - No excerpt and no date (brief: no third-party text; the page has no dates).
+6. **Vacancy:** "Assistant Accountant" as a draft job (posted 2022).
+7. **Offices:** the 7 in "Our Presence", published as on the old site; Netherlands and Jersey as
+   drafts with TODO-CONTENT (the old footer names them without addresses).
+8. **Awards:** 24, parsed from sentences on /awards/, **all as drafts for an editor to check**.
+   Each keeps the old sentence word for word as its description. Where the sentence does not
+   name the awarding body, it is TODO-CONTENT.
+9. **Legal documents:** the PDFs whose names say disclaimer, conflict of interest, PAIA, privacy,
+   terms or cookies go to Documents, each with a draft legal page holding the PDF and
+   TODO-CONTENT for the text. **The other 97 PDFs** (fund factsheets, application forms, hedge
+   fund surveys, brochures) are listed in the report, not imported. **Needs decision:** which of
+   them belong on the new site.
+10. **Not imported:** the old site's other pages (about, solutions, impact and the like); their
+    content is rewritten for the new templates. The old site does not publish article authors,
+    so authors are TODO.
+11. **Staging also holds the fake seed content** (M3). Removing it means deleting content, so
+    it is a question for the PR (brief §14 rule 9), not done here.
+
+## M7 — Hardening (2026-10-19)
+
+M7 came before M6 (content migration), at the owner's request, while this environment could not
+yet reach novare.com. The checklist is `docs/launch-checklist.md`.
+
+1. **CSP without nonces.** **Deviation:** the brief asks for a nonce-based CSP. Next.js only adds
+   nonces to pages rendered per request, which turns off the page cache (static rendering and
+   on-demand ISR) and works against the performance budgets (Next.js CSP guide, "Static vs
+   Dynamic Rendering"). The policy follows the guide's "without nonces" form instead:
+   - scripts from the site only, plus Cloudflare Turnstile, with inline scripts allowed (Next.js
+     streams page data in inline scripts);
+   - `object-src 'none'`, `base-uri 'self'`, `form-action 'self'`, and `frame-ancestors 'self'`
+     (live preview frames the site from the admin);
+   - `upgrade-insecure-requests` on HTTPS.
+
+   The admin also allows `cdn.jsdelivr.net`, where Payload's code editor (Monaco) loads from.
+   Next.js's experimental SRI is not used: it is experimental and does not cover the inline
+   scripts.
+
+2. **HSTS:** one year, this host only, with no `includeSubDomains` or preload. Other
+   novare.com subdomains are not this project's to commit to HTTPS. Revisit at launch.
+3. **Forms** (brief §9):
+   - **One way in.** Submissions arrive only through `POST /api/submit-form/`. Payload's own
+     create is closed (`create: nobody`).
+   - **Checks, in order:** a rate limit of 5 per IP per 10 minutes; a honeypot (a filled one
+     gets a fake "ok" and nothing is stored); a signed time token (`GET /api/form-token/`,
+     fetched by the browser because pages are cached), which refuses forms sent within
+     2 seconds or older than 24 hours; Turnstile, when `TURNSTILE_SECRET_KEY` is set; then
+     validation against the form's own fields.
+   - **What is stored.** Unknown fields are dropped. A consent record (given, wording shown,
+     time) is kept with each submission. IP addresses are not stored.
+4. **Routing:** each form has an "Enquiry routing" list (topic value → address, `*` for the
+   rest). The sender's confirmation is form-builder's own Emails setting. The CRM webhook
+   (`CRM_WEBHOOK_URL`) gets the submission as JSON, signed with `CRM_WEBHOOK_SECRET`. Email and
+   webhook failures are logged and never lose the submission.
+5. **Email:** the official `@payloadcms/email-resend` adapter, used when `RESEND_API_KEY` and
+   `EMAIL_FROM` are set; otherwise Payload writes emails to the log.
+6. **Retention:** a Payload job (`delete-old-submissions`, queue `maintenance`) runs nightly at
+   03:00 UTC and deletes submissions older than `FORM_RETENTION_MONTHS` (default 12).
+   - The cron starts from `src/instrumentation.ts` when the server boots (Payload starts crons
+     only on request), never in CLI commands or the build. `PAYLOAD_JOBS=off` switches it off.
+   - The jobs collection is visible to admins under System.
+   - **The in-process rate limiter counts per server instance** and resets on deploy;
+     Cloudflare rate limiting is the outer layer.
+7. **Cookie consent:** a banner driven by site settings (off by default, wording TODO-CONTENT),
+   with Accept and Decline, a six-month first-party cookie, and "Cookie settings" in the footer
+   to change the choice. **There is no analytics yet** (brief §15). Whatever is chosen must
+   render inside `<ConsentGate>` and be added to the CSP; switch the banner on at the same
+   time. With no optional cookies, showing a banner would ask about nothing.
+8. **Error monitoring:** Railway logs rather than Sentry (no new paid account). Server errors
+   go to stderr as one JSON line each (`src/lib/monitoring.ts`), without query strings or
+   headers. Alerts for crashes and failed deploys are Railway webhooks (checklist).
+9. **Redirects deferred.** At the owner's request, redirects and the old-URL crawl wait until
+   the site is final and ready to go live. The work continues on the staging URL.
+10. **Dependencies:**
+    - sharp is upgraded to 0.35.5 (GHSA-wq5f-xc86-pv6w).
+    - **Ignored:** GHSA-vfj7-8cjw-p6xm (braces, high). It reaches us only through
+      `@payloadcms/next` → sass → chokidar, the build's file watcher, which never sees visitor
+      input, and there is no patched version. Remove the ignore when Payload's dependency
+      moves on.
+    - The moderate esbuild advisory (drizzle-kit, development server only) and the low
+      DOMPurify ones (the admin code editor) are below the CI gate.
+11. **Backups:** the restore test is a Railway dashboard action that replaces a service's live
+    data, so it is left to a person, on staging (checklist).
+
 ## M5 — AI editor (2026-10-18)
 
 The brief's §10 as built, in `src/ai/` (server only) and `src/admin/ai/` (admin UI).

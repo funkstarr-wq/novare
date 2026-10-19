@@ -3,6 +3,7 @@ import { draftMode } from 'next/headers'
 import React from 'react'
 
 import { JsonLd } from '@/components/JsonLd'
+import { CookieBanner } from '@/components/layout/CookieBanner'
 import { Footer } from '@/components/layout/Footer'
 import { Header } from '@/components/layout/Header'
 import { PreviewBanner } from '@/components/layout/PreviewBanner'
@@ -48,6 +49,7 @@ export default async function FrontendLayout({ children }: { children: React.Rea
           {children}
         </main>
         <Footer draft={draft} />
+        <CookieBanner draft={draft} />
       </body>
     </html>
   )

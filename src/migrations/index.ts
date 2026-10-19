@@ -4,6 +4,8 @@ import * as migration_20261017_203529_roles_review from './20261017_203529_roles
 import * as migration_20261018_091131_two_factor from './20261018_091131_two_factor';
 import * as migration_20261018_193116_seo_noindex from './20261018_193116_seo_noindex';
 import * as migration_20261018_205009_ai_editor from './20261018_205009_ai_editor';
+import * as migration_20261019_070236_hardening from './20261019_070236_hardening';
+import * as migration_20261019_073315_wordpress_source_url from './20261019_073315_wordpress_source_url';
 
 export const migrations = [
   {
@@ -34,6 +36,16 @@ export const migrations = [
   {
     up: migration_20261018_205009_ai_editor.up,
     down: migration_20261018_205009_ai_editor.down,
-    name: '20261018_205009_ai_editor'
+    name: '20261018_205009_ai_editor',
+  },
+  {
+    up: migration_20261019_070236_hardening.up,
+    down: migration_20261019_070236_hardening.down,
+    name: '20261019_070236_hardening',
+  },
+  {
+    up: migration_20261019_073315_wordpress_source_url.up,
+    down: migration_20261019_073315_wordpress_source_url.down,
+    name: '20261019_073315_wordpress_source_url'
   },
 ];
