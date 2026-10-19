@@ -84,6 +84,9 @@ Local Postgres: copy `.env.example` to `.env`; create the dev and test databases
 - Form submissions only arrive through `/api/submit-form/` (spam checks, `src/endpoints/forms.ts`);
   Payload's own create is closed. The job cron starts in `src/instrumentation.ts`, never in CLI
   commands.
+- WordPress import (`src/migration/wordpress/`, `pnpm import:wp`): upserts by the hidden
+  `sourceUrl` field and never deletes. On Railway it runs in pre-deploy when
+  `WORDPRESS_IMPORT=true`. Its report is `docs/migration-report.md`.
 - Migrations are generated, but may be hand-edited for data backfills; mark the edit with a
   comment. Collections live in `src/collections/`, page sections in `src/blocks/`, shared field
   builders (slug, link, seo tab, rich text, layout) in `src/fields/`.
