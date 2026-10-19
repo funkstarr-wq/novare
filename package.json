@@ -20,6 +20,8 @@
     "generate": "pnpm generate:types && pnpm generate:importmap",
     "seed": "cross-env NODE_OPTIONS=--no-deprecation payload run scripts/seed.ts",
     "import:wp": "cross-env NODE_OPTIONS=--no-deprecation payload run scripts/import-wordpress.ts",
+    "import:redirects": "cross-env NODE_OPTIONS=--no-deprecation payload run scripts/import-redirects.ts",
+    "check:urls": "tsx scripts/check-urls.ts",
     "check:content": "cross-env NODE_OPTIONS=--no-deprecation payload run scripts/check-todo-content.ts",
     "lint": "eslint . --max-warnings 0",
     "format": "prettier --write .",
