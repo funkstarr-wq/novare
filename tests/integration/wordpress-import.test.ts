@@ -226,14 +226,22 @@ describe('WordPress import', () => {
     expect(requested.every((path) => path.startsWith('/wp-'))).toBe(true)
   })
 
-  it('updates the same documents when run again, creating nothing new', async () => {
+  it('adds nothing and keeps editors’ changes when run again', async () => {
     const before = (await bySource('insights')).totalDocs + (await bySource('awards')).totalDocs
     const media = await payload.count({
       collection: 'media',
       where: { sourceUrl: { like: ORIGIN } },
     })
+    const first = (await bySource('insights')).docs.find((doc) => doc.slug === 'wp-test-first')!
+    await payload.update({
+      collection: 'insights',
+      id: first.id,
+      data: { excerpt: 'Edited by an editor' },
+      overrideAccess: true,
+    })
+
     const report = await run()
-    expect(report.sections.insights).toMatchObject({ created: 0, updated: 2 })
+    expect(report.sections.insights).toMatchObject({ created: 0, updated: 0, unchanged: 2 })
     expect((await bySource('insights')).totalDocs + (await bySource('awards')).totalDocs).toBe(
       before,
     )
@@ -241,5 +249,18 @@ describe('WordPress import', () => {
       (await payload.count({ collection: 'media', where: { sourceUrl: { like: ORIGIN } } }))
         .totalDocs,
     ).toBe(media.totalDocs)
+    const kept = (await bySource('insights')).docs.find((doc) => doc.slug === 'wp-test-first')!
+    expect(kept.excerpt).toBe('Edited by an editor')
+  })
+
+  it('overwrites from the old site only when asked to', async () => {
+    const report = await importWordPress(payload, {
+      client: new WordPressClient(ORIGIN, fetcher),
+      log: () => undefined,
+      overwrite: true,
+    })
+    expect(report.sections.insights).toMatchObject({ created: 0, updated: 2, unchanged: 0 })
+    const first = (await bySource('insights')).docs.find((doc) => doc.slug === 'wp-test-first')!
+    expect(first.excerpt).toBe('Summary of article 1')
   })
 })

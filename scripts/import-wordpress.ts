@@ -17,6 +17,7 @@ const reportPath = process.env.MIGRATION_REPORT || null
 const payload = await getPayload({ config })
 const report = await importWordPress(payload, {
   client: new WordPressClient(process.env.WORDPRESS_URL || 'https://novare.com'),
+  overwrite: process.env.WORDPRESS_IMPORT_OVERWRITE === 'true',
 })
 const markdown = reportMarkdown(report)
 if (reportPath) writeFileSync(reportPath, markdown)
