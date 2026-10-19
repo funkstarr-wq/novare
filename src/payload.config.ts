@@ -31,6 +31,11 @@ import { Solutions } from './collections/Solutions'
 import { Users } from './collections/Users'
 import { admins, anyone, nobody, publicOperations, publishers, staff } from './access'
 import { aiEndpoints } from './endpoints/ai'
+import { formEndpoints } from './endpoints/forms'
+import { consentRecordField, formRoutingField } from './fields/forms'
+import { routeSubmission } from './hooks/formSubmissions'
+import { retentionTask } from './jobs/retention'
+import { emailAdapter } from './lib/email'
 import { linkableCollections } from './fields/link'
 import { revalidateRedirect, revalidateRedirectDelete } from './hooks/revalidate'
 import { previewURL } from './lib/preview'
@@ -40,9 +45,13 @@ import { AiSettings, Footer, Header, SiteSettings } from './globals'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
+const serverURL = process.env.NEXT_PUBLIC_SERVER_URL || ''
 
 export default buildConfig({
-  serverURL: process.env.NEXT_PUBLIC_SERVER_URL || '',
+  serverURL,
+  // Browsers may only call the API with cookies from the site itself (brief §12).
+  cors: serverURL ? [serverURL] : [],
+  csrf: serverURL ? [serverURL] : [],
   admin: {
     user: Users.slug,
     importMap: {
@@ -94,7 +103,18 @@ export default buildConfig({
     AuditLog,
   ],
   globals: [Header, Footer, SiteSettings, AiSettings],
-  endpoints: aiEndpoints,
+  endpoints: [...aiEndpoints, ...formEndpoints],
+  email: emailAdapter(),
+  // Scheduled maintenance (brief §9): the server starts the cron from instrumentation.ts.
+  jobs: {
+    tasks: [retentionTask],
+    autoRun: [{ cron: '*/15 * * * *', queue: 'maintenance' }],
+    jobsCollectionOverrides: ({ defaultJobsCollection }) => ({
+      ...defaultJobsCollection,
+      admin: { ...defaultJobsCollection.admin, group: adminGroups.system, hidden: false },
+      access: { ...defaultJobsCollection.access, read: admins },
+    }),
+  },
   editor: richTextEditor,
   // English only for v1, but every locale-aware API is already in place: adding a language is
   // this list plus `localized: true` on the fields that need translating (brief §1 non-goals).
@@ -163,12 +183,15 @@ export default buildConfig({
         admin: { group: adminGroups.site },
         access: { read: anyone, create: publishers, update: publishers, delete: publishers },
         custom: publicOperations('read'),
+        fields: ({ defaultFields }) => [...defaultFields, formRoutingField],
       },
-      // Submissions hold personal data (POPIA): anyone may send one, few may read them.
+      // Submissions hold personal data (POPIA): few may read them, and they only arrive through
+      // /api/submit-form/, which runs the spam checks (src/endpoints/forms.ts).
       formSubmissionOverrides: {
         admin: { group: adminGroups.site },
-        access: { create: anyone, read: publishers, update: nobody, delete: admins },
-        custom: publicOperations('create'),
+        access: { create: nobody, read: publishers, update: nobody, delete: admins },
+        fields: ({ defaultFields }) => [...defaultFields, consentRecordField],
+        hooks: { afterChange: [routeSubmission] },
       },
     }),
     // Media and documents go to the Railway Bucket when S3_BUCKET is set; local disk otherwise.

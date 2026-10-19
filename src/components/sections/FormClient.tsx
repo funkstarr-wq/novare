@@ -1,6 +1,7 @@
 'use client'
 
-import { type FormEvent, type ReactNode, useId, useState } from 'react'
+import Script from 'next/script'
+import { type FormEvent, type ReactNode, useEffect, useId, useState } from 'react'
 
 import type { Form } from '@/payload-types'
 
@@ -18,10 +19,17 @@ type Props = {
   privacyHref: null | string
 }
 
+// Cloudflare Turnstile runs only when a site key is configured (brief §9).
+const turnstileKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY
+
 const inputClass =
   'w-full rounded-md border border-border bg-surface px-3 py-2 text-ink focus-visible:border-focus'
 
-/** Posts to Payload's form-builder endpoint and shows the form's confirmation message. */
+/**
+ * Sends the form to /api/submit-form/ (spam checks and validation, src/endpoints/forms.ts) and
+ * shows the form's confirmation message. The time-to-submit token is fetched when the form
+ * loads, because the page itself is cached.
+ */
 export function FormClient({
   formId,
   fields,
@@ -31,11 +39,23 @@ export function FormClient({
   privacyHref,
 }: Props) {
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
+  const [error, setError] = useState<null | string>(null)
+  const [token, setToken] = useState<null | string>(null)
   const prefix = useId()
+
+  useEffect(() => {
+    fetch('/api/form-token/')
+      .then((response) => response.json() as Promise<{ token?: string }>)
+      .then(
+        (data) => setToken(data.token ?? null),
+        () => setToken(null),
+      )
+  }, [])
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setStatus('sending')
+    setError(null)
     const data = new FormData(event.currentTarget)
     const submissionData = fields
       .filter((field) => field.blockType !== 'message')
@@ -45,12 +65,22 @@ export function FormClient({
           field.blockType === 'checkbox' ? String(data.get(name) === 'on') : data.get(name)
         return { field: name, value: String(value ?? '') }
       })
-    const response = await fetch('/api/form-submissions/', {
+    const response = await fetch('/api/submit-form/', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ form: formId, submissionData }),
+      body: JSON.stringify({
+        form: formId,
+        submissionData,
+        token,
+        website: data.get('website'),
+        turnstileToken: data.get('cf-turnstile-response'),
+      }),
     }).catch(() => null)
-    if (!response?.ok) return setStatus('error')
+    if (!response?.ok) {
+      const body = (await response?.json().catch(() => null)) as { error?: string } | null
+      setError(body?.error ?? null)
+      return setStatus('error')
+    }
     if (redirectTo) return window.location.assign(redirectTo)
     setStatus('sent')
   }
@@ -145,9 +175,29 @@ export function FormClient({
           </div>
         )
       })}
+      {/* A field people never see or fill in: anything typed here marks the sender as a bot. */}
+      <div aria-hidden="true" className="absolute -left-[9999px] h-px w-px overflow-hidden">
+        <label htmlFor={`${prefix}-website`}>Website</label>
+        <input
+          id={`${prefix}-website`}
+          name="website"
+          type="text"
+          tabIndex={-1}
+          autoComplete="off"
+        />
+      </div>
+      {turnstileKey && (
+        <>
+          <Script
+            src="https://challenges.cloudflare.com/turnstile/v0/api.js"
+            strategy="lazyOnload"
+          />
+          <div className="cf-turnstile" data-sitekey={turnstileKey} />
+        </>
+      )}
       {status === 'error' && (
         <p role="alert" className="text-danger">
-          Your message could not be sent. Please try again.
+          {error ?? 'Your message could not be sent. Please try again.'}
         </p>
       )}
       <div>

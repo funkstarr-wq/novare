@@ -34,6 +34,7 @@
   "dependencies": {
     "@anthropic-ai/sdk": "0.133.0",
     "@payloadcms/db-postgres": "3.91.0",
+    "@payloadcms/email-resend": "3.91.0",
     "@payloadcms/live-preview-react": "3.91.0",
     "@payloadcms/next": "3.91.0",
     "@payloadcms/plugin-form-builder": "3.91.0",
@@ -50,7 +51,7 @@
     "payload-totp": "3.0.6",
     "react": "19.2.6",
     "react-dom": "19.2.6",
-    "sharp": "0.35.4",
+    "sharp": "0.35.5",
     "zod": "4.6.7"
   },
   "devDependencies": {
@@ -79,6 +80,11 @@
       "esbuild",
       "sharp",
       "unrs-resolver"
-    ]
+    ],
+    "auditConfig": {
+      "ignoreGhsas": [
+        "GHSA-vfj7-8cjw-p6xm"
+      ]
+    }
   }
 }

@@ -53,5 +53,28 @@ export const SiteSettings: GlobalConfig = {
         },
       ],
     },
+    {
+      name: 'cookieBanner',
+      label: 'Cookie banner',
+      type: 'group',
+      admin: {
+        description:
+          'Asks visitors before any analytics cookie is set (brief §12). Switch it on together with analytics; the site sets no other optional cookies.',
+      },
+      fields: [
+        { name: 'enabled', label: 'Show the cookie banner', type: 'checkbox', defaultValue: false },
+        {
+          name: 'message',
+          type: 'textarea',
+          admin: { description: 'POPIA/GDPR wording, from Novare.' },
+        },
+        {
+          name: 'policy',
+          label: 'Cookie or privacy notice',
+          type: 'relationship',
+          relationTo: 'legal-documents',
+        },
+      ],
+    },
   ],
 }
