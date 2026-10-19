@@ -264,6 +264,7 @@ export interface Media {
    * Describe the image for people who cannot see it.
    */
   alt: string;
+  sourceUrl?: string | null;
   prefix?: string | null;
   _objectKey?: string | null;
   updatedAt: string;
@@ -787,6 +788,7 @@ export interface Document {
    * Person or team responsible for keeping this document current.
    */
   owner?: string | null;
+  sourceUrl?: string | null;
   prefix?: string | null;
   _objectKey?: string | null;
   updatedAt: string;
@@ -814,6 +816,7 @@ export interface Award {
   fund?: (number | null) | Fund;
   solution?: (number | null) | Solution;
   description?: string | null;
+  sourceUrl?: string | null;
   updatedAt: string;
   createdAt: string;
   _status?: ('draft' | 'published') | null;
@@ -1285,6 +1288,7 @@ export interface Insight {
   publishedAt?: string | null;
   author?: (number | null) | Person;
   category?: (number | null) | Category;
+  sourceUrl?: string | null;
   updatedAt: string;
   createdAt: string;
   _status?: ('draft' | 'published') | null;
@@ -1390,6 +1394,7 @@ export interface Job {
    */
   generateSlug?: boolean | null;
   slug: string;
+  sourceUrl?: string | null;
   updatedAt: string;
   createdAt: string;
   _status?: ('draft' | 'published') | null;
@@ -1434,6 +1439,7 @@ export interface Office {
   countrySlug?: string | null;
   isHeadOffice?: boolean | null;
   order?: number | null;
+  sourceUrl?: string | null;
   updatedAt: string;
   createdAt: string;
   _status?: ('draft' | 'published') | null;
@@ -1482,6 +1488,7 @@ export interface LegalDocument {
   slug: string;
   versionDate?: string | null;
   owner?: string | null;
+  sourceUrl?: string | null;
   review?: Review;
   updatedAt: string;
   createdAt: string;
@@ -1505,6 +1512,7 @@ export interface PressMention {
    */
   excerpt?: string | null;
   people?: (number | Person)[] | null;
+  sourceUrl?: string | null;
   updatedAt: string;
   createdAt: string;
   _status?: ('draft' | 'published') | null;
@@ -2426,6 +2434,7 @@ export interface OfficesSelect<T extends boolean = true> {
   countrySlug?: T;
   isHeadOffice?: T;
   order?: T;
+  sourceUrl?: T;
   updatedAt?: T;
   createdAt?: T;
   _status?: T;
@@ -2442,6 +2451,7 @@ export interface AwardsSelect<T extends boolean = true> {
   fund?: T;
   solution?: T;
   description?: T;
+  sourceUrl?: T;
   updatedAt?: T;
   createdAt?: T;
   _status?: T;
@@ -2469,6 +2479,7 @@ export interface JobsSelect<T extends boolean = true> {
       };
   generateSlug?: T;
   slug?: T;
+  sourceUrl?: T;
   updatedAt?: T;
   createdAt?: T;
   _status?: T;
@@ -2496,6 +2507,7 @@ export interface InsightsSelect<T extends boolean = true> {
   publishedAt?: T;
   author?: T;
   category?: T;
+  sourceUrl?: T;
   updatedAt?: T;
   createdAt?: T;
   _status?: T;
@@ -2533,6 +2545,7 @@ export interface PressMentionsSelect<T extends boolean = true> {
   thumbnail?: T;
   excerpt?: T;
   people?: T;
+  sourceUrl?: T;
   updatedAt?: T;
   createdAt?: T;
   _status?: T;
@@ -2587,6 +2600,7 @@ export interface LegalDocumentsSelect<T extends boolean = true> {
   slug?: T;
   versionDate?: T;
   owner?: T;
+  sourceUrl?: T;
   review?: T | ReviewSelect<T>;
   updatedAt?: T;
   createdAt?: T;
@@ -2598,6 +2612,7 @@ export interface LegalDocumentsSelect<T extends boolean = true> {
  */
 export interface MediaSelect<T extends boolean = true> {
   alt?: T;
+  sourceUrl?: T;
   prefix?: T;
   _objectKey?: T;
   updatedAt?: T;
@@ -2675,6 +2690,7 @@ export interface DocumentsSelect<T extends boolean = true> {
   type?: T;
   versionDate?: T;
   owner?: T;
+  sourceUrl?: T;
   prefix?: T;
   _objectKey?: T;
   updatedAt?: T;
