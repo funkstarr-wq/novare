@@ -34,7 +34,7 @@ const converters: JSXConvertersFunction = ({ defaultConverters }) => ({
   // Blocks editors can place inside an insight's body (src/collections/Insights.ts).
   blocks: {
     articleQuote: ({ node }: BlockNode<ArticleQuoteBlock>) => (
-      <figure className="border-l-4 border-brand pl-4">
+      <figure className="border-l-4 border-accent pl-4">
         <blockquote className="text-xl">{node.fields.text}</blockquote>
         {node.fields.attribution && (
           <figcaption className="mt-2 text-ink-muted">{node.fields.attribution}</figcaption>

@@ -52,7 +52,8 @@ Local Postgres: copy `.env.example` to `.env`; create the dev and test databases
 - Local dev pushes schema automatically; CI and Railway run migrations (`PAYLOAD_DB_PUSH=false`).
   A schema change without a migration passes locally and fails CI.
 - Front-end styling uses only the tokens in `src/styles/globals.css`; Tailwind's default palette is
-  cleared on purpose. Tailwind is loaded by the `(frontend)` layout only, never in the admin.
+  cleared on purpose. Tailwind is loaded by the `(frontend)` layout only, never in the admin. The
+  theme is Novare's interim identity; `accent` (bright green) fails contrast, so decoration only.
 - `src/app/(payload)/`, `src/payload-types.ts` and `src/migrations/` are generated: regenerate,
   don't hand-edit.
 - Railway config is `.railway/railway.ts` (IaC), applied with the Railway CLI, not read at deploy.
