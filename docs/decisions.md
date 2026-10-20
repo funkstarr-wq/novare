@@ -11,8 +11,7 @@ writing it uncovered.
 
 1. **Production is set up three weeks ahead, and editors build the final content there.**
    Payload has no content export between environments, so pages built on staging would have to
-   be made again. Staging stays a sandbox. **Needs decision:** confirm this with Novare's content
-   lead.
+   be made again. Staging stays a sandbox. Confirmed by the owner (2026-10-20).
    - Production stays out of search engines until the cutover. While `NEXT_PUBLIC_SERVER_URL` is
      a `*.railway.app` address, `indexableHost()` is false: `robots.txt` disallows everything and
      pages carry `noindex`.
