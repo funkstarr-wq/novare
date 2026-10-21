@@ -10,9 +10,10 @@ with the Railway CLI (5.42.1 or newer), once per environment, and again whenever
 | `staging`       | `staging`     | Base environment for PR environments.                                      |
 | PR environments | the PR branch | Ephemeral copy of `staging`, with its own Postgres. Seeded by `pnpm seed`. |
 
-Every deploy runs migrations before start. Staging and PR environments then run `pnpm seed`, which
-does nothing outside PR environments (`src/lib/seed`). Production instead runs `pnpm check:content`,
-which stops the deploy while any published content still contains `TODO-CONTENT`.
+Every deploy runs migrations before start, then `pnpm seed`, which seeds only PR environments
+(`src/lib/seed`) but also runs the WordPress and redirects imports when their variables are set.
+Production then runs `pnpm check:content`, which stops the deploy while any published content still
+contains `TODO-CONTENT`.
 
 Uploads (media and documents) go to the `media` bucket: the `web` service reads its credentials
 through reference variables (`S3_BUCKET=${{media.BUCKET}}`, `S3_ENDPOINT=${{media.ENDPOINT}}`,
@@ -63,8 +64,15 @@ through reference variables (`S3_BUCKET=${{media.BUCKET}}`, `S3_ENDPOINT=${{medi
    the manual test. Never set `AI_MOCK` on Railway; it is ignored there anyway.
 10. **WordPress import (M6).** On the target environment, set `WORDPRESS_IMPORT=true` and
     redeploy: the pre-deploy step imports from novare.com and prints the report in the deploy
-    logs. Remove the variable afterwards (running again only repeats the same upserts).
-11. **Hardening (M7).** Email, Turnstile, routing, alerts and the backup restore test are in
+    logs. Set it back to `false` afterwards. A re-run only adds what is new on the old site;
+    `WORDPRESS_IMPORT_OVERWRITE=true` also re-imports what was imported before, undoing editors'
+    changes to it (decision M8 §2).
+11. **Redirects (M8).** `REDIRECTS_IMPORT=true` imports `docs/redirects.csv` in the pre-deploy
+    step (after the WordPress import). Set it back to `false` afterwards.
+12. **Production and go-live (M8):** [`launch-runbook.md`](launch-runbook.md). Production's
+    pre-deploy runs `pnpm seed` too (it seeds nothing there, but runs the imports when asked),
+    and its `NEXT_PUBLIC_SERVER_URL` is set by hand.
+13. **Hardening (M7).** Email, Turnstile, routing, alerts and the backup restore test are in
     `docs/launch-checklist.md`. The variables are `RESEND_API_KEY`, `EMAIL_FROM`,
     `NEXT_PUBLIC_TURNSTILE_SITE_KEY` (needed at build time), `TURNSTILE_SECRET_KEY`, optionally
     `CRM_WEBHOOK_URL` and `CRM_WEBHOOK_SECRET`, and `FORM_RETENTION_MONTHS`.
