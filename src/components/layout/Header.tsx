@@ -1,6 +1,7 @@
+import Image from 'next/image'
 import NextLink from 'next/link'
 
-import { linkHref } from '@/lib/urls'
+import { fileURL, linkHref } from '@/lib/urls'
 import { getHeader, getSiteSettings } from '@/lib/queries'
 
 import { type NavItem, NavMenu } from './NavMenu'
@@ -20,11 +21,28 @@ export async function Header({ draft }: { draft: boolean }) {
   const cta =
     ctaHref && header.utilityCta ? { label: header.utilityCta.label, href: ctaHref } : null
 
+  // The logo from site settings, 40px tall; the organisation's name until one is uploaded.
+  const logo = typeof settings.logo === 'object' ? settings.logo : null
+  const logoSrc = fileURL(logo?.url)
+  const logoWidth = logo?.width && logo.height ? Math.round((40 * logo.width) / logo.height) : null
+
   return (
-    <header className="relative border-b border-border bg-surface">
+    <header className="relative border-b-2 border-accent bg-surface">
       <div className="mx-auto flex max-w-(--container-page) items-center justify-between gap-6 px-6 py-4">
         <NextLink href="/" className="text-xl font-bold text-brand-strong">
-          {settings.organisationName}
+          {logoSrc && logoWidth ? (
+            <Image
+              src={logoSrc}
+              alt={settings.organisationName}
+              width={logoWidth}
+              height={40}
+              sizes={`${logoWidth}px`}
+              loading="eager"
+              className="h-10 w-auto"
+            />
+          ) : (
+            settings.organisationName
+          )}
           <span className="sr-only"> home page</span>
         </NextLink>
         <NavMenu items={items} cta={cta} />

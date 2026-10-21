@@ -1,27 +1,34 @@
 @import 'tailwindcss';
 
 /*
- * Neutral placeholder theme (brief §8.1). Components may only use these tokens: the default
- * Tailwind palette is cleared so a stray `bg-blue-500` fails to style anything. When the brand
- * design is approved, swap the values here; class names and the data model stay unchanged.
+ * Interim theme: Novare's current identity from the old site (decision "Interim brand"), until
+ * the brand refresh's designs are approved (brief §8.1). Components may only use these tokens:
+ * the default Tailwind palette is cleared so a stray `bg-blue-500` fails to style anything. When
+ * the designs arrive, swap the values here; class names and the data model stay unchanged.
  */
 @theme {
   --color-*: initial;
   --color-white: #ffffff;
-  --color-brand: #1f4e79;
-  --color-brand-strong: #163a5c;
+  /* The old site's dark green (its hover colour): text and buttons, 8.9:1 on white. */
+  --color-brand: #21541e;
+  --color-brand-strong: #173b15;
   --color-on-brand: #ffffff;
-  --color-ink: #1a1d21;
-  --color-ink-muted: #4a5159;
+  /* The old site's bright green. 2.6:1 on white, so decoration only (rules, quote bars): never
+     for text, icons or control borders (WCAG 2.2 AA, brief §1). */
+  --color-accent: #5fb257;
+  --color-ink: #1f1f1f;
+  --color-ink-muted: #545454;
   --color-surface: #ffffff;
-  --color-surface-muted: #f4f5f7;
-  --color-border: #d7dbe0;
-  --color-focus: #1f4e79;
+  --color-surface-muted: #f4f4f4;
+  --color-border: #d6d6d6;
+  --color-focus: #21541e;
   --color-danger: #b42318;
   --color-success: #067647;
 
+  /* Montserrat, the old site's typeface, self-hosted by next/font in the frontend layout. */
   --font-sans:
-    ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    var(--font-montserrat), ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto,
+    'Helvetica Neue', Arial, sans-serif;
 
   --text-sm: 0.875rem;
   --text-sm--line-height: 1.5;
