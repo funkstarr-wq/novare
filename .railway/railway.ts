@@ -36,11 +36,12 @@ export default defineRailway((ctx) => {
       buildCommand: 'pnpm install --frozen-lockfile && pnpm build',
     },
     deploy: {
-      // Production refuses to deploy while published content still says TODO-CONTENT (brief §14
-      // rule 3). Elsewhere `pnpm seed` runs, and is a no-op outside PR environments.
+      // `pnpm seed` only seeds PR environments, but also runs the WordPress and redirects imports
+      // when WORDPRESS_IMPORT / REDIRECTS_IMPORT are true (docs/launch-runbook.md). Production then
+      // refuses to deploy while published content still says TODO-CONTENT (brief §14 rule 3).
       preDeployCommand: [
         production
-          ? 'pnpm payload migrate && pnpm check:content'
+          ? 'pnpm payload migrate && pnpm seed && pnpm check:content'
           : 'pnpm payload migrate && pnpm seed',
       ],
       startCommand: 'pnpm start',
@@ -54,7 +55,9 @@ export default defineRailway((ctx) => {
     },
     env: {
       DATABASE_URL: db.env.DATABASE_URL,
-      NEXT_PUBLIC_SERVER_URL: 'https://${{RAILWAY_PUBLIC_DOMAIN}}',
+      // Production's is set by hand: its Railway address until the DNS cutover, then
+      // https://novare.com (docs/launch-runbook.md). Applying this file must not undo that.
+      NEXT_PUBLIC_SERVER_URL: production ? preserve() : 'https://${{RAILWAY_PUBLIC_DOMAIN}}',
       PAYLOAD_DB_PUSH: 'false',
       PORT: '3000',
       NEXT_TELEMETRY_DISABLED: '1',

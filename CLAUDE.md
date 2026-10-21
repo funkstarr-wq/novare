@@ -22,6 +22,8 @@ pnpm payload migrate:create <name>   # after any schema change
 pnpm payload migrate     # apply migrations
 pnpm seed                # dev content, fake names + TODO-CONTENT (local, CI, PR envs only)
 pnpm check:content       # fail if published content still contains TODO-CONTENT
+pnpm import:redirects    # docs/redirects.csv → redirects collection (upsert, never deletes)
+CHECK_BASE_URL=<url> pnpm check:urls   # old-site URLs must answer 200 or one 301 → 200
 ```
 
 Local Postgres: copy `.env.example` to `.env`; create the dev and test databases it names.
@@ -85,9 +87,14 @@ Local Postgres: copy `.env.example` to `.env`; create the dev and test databases
 - Form submissions only arrive through `/api/submit-form/` (spam checks, `src/endpoints/forms.ts`);
   Payload's own create is closed. The job cron starts in `src/instrumentation.ts`, never in CLI
   commands.
-- WordPress import (`src/migration/wordpress/`, `pnpm import:wp`): upserts by the hidden
-  `sourceUrl` field and never deletes. On Railway it runs in pre-deploy when
-  `WORDPRESS_IMPORT=true`. Its report is `docs/migration-report.md`.
+- WordPress import (`src/migration/wordpress/`, `pnpm import:wp`): keyed by the hidden
+  `sourceUrl` field; a re-run adds what is new and leaves imported documents alone (overwriting
+  needs `WORDPRESS_IMPORT_OVERWRITE=true`); it never deletes. On Railway it runs in pre-deploy
+  when `WORDPRESS_IMPORT=true`. Its report is `docs/migration-report.md`.
+- Go-live (`docs/launch-runbook.md`): redirects come from `docs/redirects.csv` (no chains; the
+  import refuses the whole file on a bad row). Production stays `noindex` while
+  `NEXT_PUBLIC_SERVER_URL` is a `*.railway.app` address. Next.js 16.3 sends a redirect's
+  `Location` header twice on its first render (decision M4 §7); browsers don't mind.
 - Migrations are generated, but may be hand-edited for data backfills; mark the edit with a
   comment. Collections live in `src/collections/`, page sections in `src/blocks/`, shared field
   builders (slug, link, seo tab, rich text, layout) in `src/fields/`.

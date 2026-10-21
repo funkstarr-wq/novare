@@ -19,8 +19,12 @@ export const absoluteFileURL = (url: null | string | undefined) => {
  * Whether search engines may index this host. Railway sets RAILWAY_ENVIRONMENT_NAME on every
  * deployment: only `production` is indexed, so staging and PR environments never are. Local and
  * CI runs (no Railway environment) behave like production, so tests see the real tags.
+ *
+ * Production stays hidden too while it is served from its `*.up.railway.app` address, before the
+ * DNS cutover sets NEXT_PUBLIC_SERVER_URL to the real domain (docs/launch-runbook.md).
  */
 export const indexableHost = () => {
   const environment = process.env.RAILWAY_ENVIRONMENT_NAME
-  return !environment || environment === 'production'
+  if (!environment) return true
+  return environment === 'production' && !new URL(siteURL()).hostname.endsWith('.railway.app')
 }

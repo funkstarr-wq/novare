@@ -30,6 +30,83 @@ content or data model changes.
    "Novare Wealth & Invest" graphic, which editors may want to replace. The old pages' photos are
    not imported (decision M6 §10).
 
+## M8 — Launch runbook (2026-10-19)
+
+The runbook is `docs/launch-runbook.md`. M8 also adds the tooling it relies on and fixes what
+writing it uncovered.
+
+1. **Production is set up three weeks ahead, and editors build the final content there.**
+   Payload has no content export between environments, so pages built on staging would have to
+   be made again. Staging stays a sandbox. Confirmed by the owner (2026-10-20).
+   - Production stays out of search engines until the cutover. While `NEXT_PUBLIC_SERVER_URL` is
+     a `*.railway.app` address, `indexableHost()` is false: `robots.txt` disallows everything and
+     pages carry `noindex`.
+   - Production's `NEXT_PUBLIC_SERVER_URL` is `preserve()` in `.railway/railway.ts`, so applying
+     the config never undoes the cutover's value.
+   - Production's pre-deploy now runs `pnpm seed` before `pnpm check:content`. It seeds nothing
+     there, but it is where the WordPress and redirects imports run. Without it,
+     `WORDPRESS_IMPORT=true` did nothing on production.
+2. **A re-run of the WordPress import no longer overwrites what it imported before.**
+   **Deviation from M6:** M6 updated every imported document on each run. The final import, two
+   days before launch, comes after weeks of editing, so it would have undone the editors' work:
+   - alt texts and awards back to their imported versions;
+   - office addresses back to TODO-CONTENT, as a new draft over the published office.
+
+   A re-run now creates only what is new and reports the rest as unchanged.
+   `WORDPRESS_IMPORT_OVERWRITE=true` restores M6's behaviour, for use before editing starts.
+
+3. **Cloudflare does not cache HTML.** **Deviation:** the brief (§4.1) has Cloudflare caching
+   pages at its African edges. Content pages send `s-maxage` of up to a year (on-demand ISR,
+   decision M3 §1), and publishing clears only Next.js's cache. With "Cache Everything",
+   Cloudflare would serve old pages long after an edit.
+   - Cloudflare keeps its default: static files (`/_next/static/`, `immutable`) are cached, and
+     HTML comes from Railway.
+   - Railway's HTTP logs therefore see every page request, which the 404 monitoring relies on.
+   - To cache HTML at the edge later, the revalidation hook (`src/hooks/revalidate.ts`) would
+     also purge the changed URLs through Cloudflare's API. That needs a Cloudflare API token on
+     Railway.
+4. **Redirects come from `docs/redirects.csv`, imported with `pnpm import:redirects`** (or
+   `REDIRECTS_IMPORT=true` in the pre-deploy step). The brief asks for the CSV and an import
+   script; the lookup itself stays in the routes, as decided in M4 §7.
+   - The import upserts by the old path and never deletes. It refuses the whole file on a bad
+     status, a duplicate, an anchor or a chain (a target that is itself redirected).
+   - Targets are stored as custom URLs (the CSV's text), not document references. If a target
+     page's slug changes later, its CSV row must change too; the crawl catches it.
+   - **The CSV so far:**
+     - the brief's required redirects;
+     - every imported article's old URL;
+     - the redirect the old site already has from `/novare-collective-investments-scheme/` to
+       novarecis.co.za.
+
+     **Needs decision:** 17 old URLs have no target yet (pages such as `/esg/`, the Wealth &
+     Invest sub-pages and the category archives). The runbook lists them. Redirects stay
+     deferred until the site is final (decision M7 §9).
+
+5. **The old-URL crawl is `pnpm check:urls`** (`src/migration/urlCheck.ts`).
+   - **What it checks:** the old site's sitemap (or the saved `docs/old-urls.txt`) plus the
+     CSV's old paths.
+   - **What passes:** a 200, or one permanent redirect (301 or 308) to a 200. A redirect to
+     another site passes but is listed for checking by hand.
+   - **What fails:** temporary redirects, chains and 404s.
+   - **Duplicate `Location` headers:** it reads identical copies as one (decision M4 §7: Next.js
+     sends the header twice the first time it renders a redirect).
+
+   `docs/old-urls.txt` is the old sitemap as of 2026-10-19: 66 paths. Run against the old site
+   itself, everything passes except two of the brief's old URLs, which already take two hops
+   there (`/novare-actuaries-and-consultants/`, `/commercial-real-estate-development/`).
+
+6. **404 monitoring uses what exists:** Railway's HTTP logs (`@httpStatus:404`, or `railway logs
+--http --status 404`), Search Console's Pages report and Cloudflare's analytics. There is no
+   custom code (brief §14 rule 5). Railway keeps HTTP logs for a limited time, depending on the
+   plan, so the runbook checks at least weekly and writes the findings down.
+7. **DNS moves to Cloudflare a week before launch, with every record still pointing at the old
+   host.** The cutover is then two proxied record changes, and rollback is changing them back.
+   The old host is kept unchanged for 30 days.
+   - Cloudflare's SSL mode is **Full**, not "Full (strict)", as Railway's docs require for
+     proxied domains.
+   - `www` is redirected to the apex by Cloudflare, so Railway needs one custom domain.
+   - Retiring the old site after 30 days deletes it, so it needs Novare's OK (§14 rule 9).
+
 ## M6 — Content migration (2026-10-19)
 
 The content import from the old WordPress site (brief §11). Redirects and the old-URL crawl are

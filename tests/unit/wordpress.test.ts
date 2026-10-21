@@ -28,6 +28,9 @@ describe('HTML cleaning and conversion', () => {
     expect(plainText('Novare&#8217;s <b>“test”</b> &amp; more&#8230;')).toBe(
       'Novare’s “test” & more…',
     )
+    expect(plainText('One day it will need to change&hellip; &ldquo;x&rdquo; &#x2014; y')).toBe(
+      'One day it will need to change… “x” — y',
+    )
   })
 
   it('keeps text and structure, drops builder markup, media and scripts', () => {

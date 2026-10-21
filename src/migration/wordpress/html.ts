@@ -22,6 +22,15 @@ const ENTITIES: Record<string, string> = {
   '&#8212;': '—',
   '&#8230;': '…',
   '&nbsp;': ' ',
+  // Named forms, which some excerpts use ("change&hellip;").
+  '&apos;': "'",
+  '&rsquo;': '’',
+  '&lsquo;': '‘',
+  '&ldquo;': '“',
+  '&rdquo;': '”',
+  '&ndash;': '–',
+  '&mdash;': '—',
+  '&hellip;': '…',
 }
 
 /** Plain text from WordPress's rendered HTML (titles, excerpts). */
@@ -31,8 +40,12 @@ export function plainText(html: string): string {
     .replace(
       /&#?[a-z0-9]+;/gi,
       (entity) =>
-        ENTITIES[entity] ??
-        (/^&#\d+;$/.test(entity) ? String.fromCodePoint(Number(entity.slice(2, -1))) : entity),
+        ENTITIES[entity.toLowerCase()] ??
+        (/^&#\d+;$/.test(entity)
+          ? String.fromCodePoint(Number(entity.slice(2, -1)))
+          : /^&#x[0-9a-f]+;$/i.test(entity)
+            ? String.fromCodePoint(parseInt(entity.slice(3, -1), 16))
+            : entity),
     )
     .replace(/\s+/g, ' ')
     .trim()
