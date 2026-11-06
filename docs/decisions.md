@@ -4,7 +4,60 @@ A running log of choices made during the build, newest milestone first. Deviatio
 [`BUILD_BRIEF.md`](BUILD_BRIEF.md) are marked **Deviation** and flagged in the milestone's PR.
 Open items that need an answer from Novare or the agency are marked **Needs decision**.
 
+## Apollo-style theme (2026-11-06)
+
+The owner asked for the site to follow apollo.com's style: its navigation, its fonts (Google Fonts
+where possible), and placeholder imagery so the pages look finished. This replaces the colours
+and typeface of "Interim brand" below; its logo handling stays. As §8.1 requires, it is tokens and
+component styling only: no data model change. The style was read from apollo.com's own markup and
+stylesheets; none of its assets, copy or images are used.
+
+1. **Typefaces.** Apollo uses two commercial fonts, so the closest free Google Fonts stand in:
+   - **EB Garamond** for headings (Apollo: Adobe Garamond Pro);
+   - **Hanken Grotesk** for text and navigation (Apollo: Graphik).
+
+   Both are self-hosted through `next/font/google`, as Montserrat was. The hero headline uses the
+   sans at medium weight, as Apollo's does.
+
+2. **Colours** (`src/styles/globals.css`), from Apollo's stylesheet:
+   - **A warm cream page** (`#fef8f3`), **near-black ink** (`#010101`), warm greys for muted text,
+     borders and bands.
+   - **Black pill buttons** with cream text.
+   - **Black bands** for the call to action and the footer.
+   - **Novare's green stays as the accent.** It is decoration only on cream (2.6:1), but readable
+     on the black bands (7.9:1).
+   - Every text pair passes AA. Form fields get a muted-ink border (6.8:1), because the cream
+     border would fail the 3:1 that controls need.
+3. **Header,** after Apollo's:
+   - **Top row,** three columns: search on the left, the logo centred, the call-to-action pill on
+     the right. The menu sits on its own row below.
+   - **Dropdowns** open as a floating white panel with 5 px corners and a soft shadow: the
+     section's name in large serif with an "overview" pill on the left, its pages in columns on
+     the right. They are still disclosure menus, as M3 built them.
+   - **On a phone,** the same list is a drawer. The header stays at the top of the screen as the
+     page scrolls.
+4. **Sections:**
+   - **Hero:** a full-bleed photograph with a dark gradient and cream text and buttons; a plain
+     cream band when there is no image.
+   - **Inner-page headers:** a large serif title beside the intro, and the image full width
+     below it.
+   - **Cards** are image-led, Apollo-style: a 10 px rounded photo that zooms slightly on hover,
+     then a serif title. The whole card is the link.
+   - **Labels** (categories, dates, years) are small uppercase eyebrows. Figures are large serif
+     numbers. Quotes are large serif statements.
+5. **Placeholder photographs** (`src/lib/seed/images/`, credits in its `CREDITS.md`):
+   - 13 Unsplash photos, used under the Unsplash License, give each seeded solution, article and
+     page its own image. The home hero gets an aerial view of a coastal city.
+   - Each is labelled "Placeholder photo: …" in its alt text. Production is never seeded.
+   - People keep a neutral placeholder: stock faces should not stand in for named staff.
+   - Databases seeded earlier (staging) still show the plain grey image. The seed swaps it for
+     the photos where the grey image is still set, and gives the home page's listing sections
+     their headings ("Our solutions" and so on), touching nothing an editor chose.
+
 ## Interim brand (2026-10-20)
+
+_Its colours and typeface are replaced by "Apollo-style theme" above; the logo handling (§3)
+still applies._
 
 Brief §15 asks "Brand refresh or keep identity?". The owner chose both: launch with Novare's
 current identity, taken from the old site, and swap in the refresh's designs once they are
