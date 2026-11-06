@@ -16,9 +16,21 @@ import '@/styles/globals.css'
 
 // The closest free fonts to Apollo's Graphik and Garamond (decision "Apollo-style theme").
 // next/font downloads them at build time and serves them from this site, so browsers never
-// contact Google (brief §8.2).
-const hanken = Hanken_Grotesk({ subsets: ['latin'], display: 'swap', variable: '--font-hanken' })
-const garamond = EB_Garamond({ subsets: ['latin'], display: 'swap', variable: '--font-garamond' })
+// contact Google (brief §8.2). Not preloaded: the largest paint is the hero photo, and on a slow
+// connection two preloaded fonts delay it past the 2.5 s budget; text shows in the size-matched
+// fallback until they arrive.
+const hanken = Hanken_Grotesk({
+  subsets: ['latin'],
+  display: 'swap',
+  preload: false,
+  variable: '--font-hanken',
+})
+const garamond = EB_Garamond({
+  subsets: ['latin'],
+  display: 'swap',
+  preload: false,
+  variable: '--font-garamond',
+})
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteURL()),

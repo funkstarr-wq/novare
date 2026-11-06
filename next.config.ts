@@ -27,6 +27,9 @@ const nextConfig: NextConfig = {
     },
   ],
   images: {
+    // AVIF first: about a third smaller than WebP, which keeps the full-bleed hero photo inside
+    // the LCP budget on a slow phone connection (decision "Apollo-style theme").
+    formats: ['image/avif', 'image/webp'],
     localPatterns: [
       {
         pathname: '/api/media/file/**',
