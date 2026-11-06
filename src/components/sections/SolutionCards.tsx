@@ -16,7 +16,7 @@ export async function SolutionCards({ block, draft }: SectionProps<SolutionCards
   if (ordered.length === 0) return null
   return (
     <Section heading={block.heading}>
-      <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      <ul className="grid gap-x-6 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">
         {ordered.map((solution) => (
           <SolutionCard key={solution.id} solution={solution} />
         ))}

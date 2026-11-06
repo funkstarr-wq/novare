@@ -23,7 +23,7 @@ type Props = {
 const turnstileKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY
 
 const inputClass =
-  'w-full rounded-md border border-border bg-surface px-3 py-2 text-ink focus-visible:border-focus'
+  'w-full rounded-md border border-ink-muted bg-white px-3 py-2 text-ink focus-visible:border-focus'
 
 /**
  * Sends the form to /api/submit-form/ (spam checks and validation, src/endpoints/forms.ts) and
@@ -204,7 +204,7 @@ export function FormClient({
         <button
           type="submit"
           disabled={status === 'sending'}
-          className="inline-flex items-center rounded-md bg-brand px-5 py-2.5 font-semibold text-on-brand hover:bg-brand-strong disabled:opacity-60"
+          className="inline-flex items-center rounded-full bg-brand px-6 py-3 font-medium text-on-brand transition-colors hover:bg-brand-strong disabled:opacity-60"
         >
           {status === 'sending' ? 'Sending…' : submitLabel}
         </button>

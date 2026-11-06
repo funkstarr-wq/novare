@@ -12,21 +12,28 @@ type Props = {
   children?: ReactNode
 }
 
-/** The one `<h1>` of a template (brief §8.2), with an optional intro and image. */
+/**
+ * The one `<h1>` of a template (brief §8.2): a large serif title beside its intro, and the image
+ * full width below it, after apollo.com (decision "Apollo-style theme").
+ */
 export function PageHeader({ title, intro, image, children }: Props) {
   return (
-    <header className="mx-auto grid max-w-(--container-page) gap-8 px-6 py-10 md:grid-cols-2 md:items-center">
-      <div className="flex flex-col gap-4">
-        <h1 className="text-3xl font-semibold text-brand-strong sm:text-4xl">{title}</h1>
-        {intro && <p className="text-lg text-ink-muted">{intro}</p>}
-        {children}
+    <header className="mx-auto w-full max-w-(--container-page) px-6 pb-12 pt-10 md:pt-16">
+      <div className="grid gap-6 md:grid-cols-[7fr_5fr] md:items-end md:gap-12">
+        <h1 className="text-4xl leading-[1.05] sm:text-5xl lg:text-6xl">{title}</h1>
+        {(intro || children) && (
+          <div className="flex flex-col items-start gap-5">
+            {intro && <p className="text-lg text-ink-muted">{intro}</p>}
+            {children}
+          </div>
+        )}
       </div>
       {image && (
         <Media
           media={image}
-          sizes="(min-width: 768px) 50vw, 100vw"
+          sizes="(min-width: 1376px) 1328px, 100vw"
           priority
-          className="h-auto w-full rounded-lg"
+          className="mt-10 aspect-[21/9] h-auto w-full rounded-[10px] object-cover md:mt-14"
         />
       )}
     </header>

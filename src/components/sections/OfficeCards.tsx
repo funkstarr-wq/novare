@@ -24,7 +24,7 @@ export async function OfficeCards({ block, draft }: SectionProps<OfficeCardsBloc
       {[...byCountry].map(([country, group]) => (
         <div key={country} className="flex flex-col gap-4">
           {block.scope !== 'country' && (
-            <h3 className="text-xl font-semibold">
+            <h3 className="text-2xl leading-tight">
               {group[0].countrySlug ? (
                 <NextLink href={countryPath(group[0].countrySlug)} className="hover:underline">
                   {country}

@@ -51,7 +51,7 @@ export default async function PersonPage({ params }: Props) {
     <>
       <JsonLd data={[jsonld.person(person)]} />
       <Breadcrumbs items={crumbs} />
-      <article className="mx-auto grid max-w-(--container-page) gap-8 px-6 py-10 md:grid-cols-[1fr_2fr]">
+      <article className="mx-auto grid w-full max-w-(--container-page) gap-8 px-6 py-10 md:grid-cols-[1fr_2fr]">
         <Media
           media={person.photo}
           sizes="(min-width: 768px) 33vw, 100vw"
@@ -59,7 +59,7 @@ export default async function PersonPage({ params }: Props) {
           className="h-auto w-full rounded-lg"
         />
         <div className="flex flex-col gap-4">
-          <h1 className="text-3xl font-semibold text-brand-strong sm:text-4xl">{person.name}</h1>
+          <h1 className="text-4xl leading-[1.05] sm:text-5xl lg:text-6xl">{person.name}</h1>
           {person.role && <p className="text-lg text-ink-muted">{person.role}</p>}
           {division && (
             <p>

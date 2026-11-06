@@ -26,27 +26,31 @@ export async function Header({ draft }: { draft: boolean }) {
   const logoSrc = fileURL(logo?.url)
   const logoWidth = logo?.width && logo.height ? Math.round((40 * logo.width) / logo.height) : null
 
+  const home = (
+    <NextLink
+      href="/"
+      className="justify-self-center text-2xl font-medium tracking-[0.2em] uppercase"
+    >
+      {logoSrc && logoWidth ? (
+        <Image
+          src={logoSrc}
+          alt={settings.organisationName}
+          width={logoWidth}
+          height={40}
+          sizes={`${logoWidth}px`}
+          loading="eager"
+          className="h-8 w-auto md:h-10"
+        />
+      ) : (
+        settings.organisationName
+      )}
+      <span className="sr-only"> home page</span>
+    </NextLink>
+  )
+
   return (
-    <header className="relative border-b-2 border-accent bg-surface">
-      <div className="mx-auto flex max-w-(--container-page) items-center justify-between gap-6 px-6 py-4">
-        <NextLink href="/" className="text-xl font-bold text-brand-strong">
-          {logoSrc && logoWidth ? (
-            <Image
-              src={logoSrc}
-              alt={settings.organisationName}
-              width={logoWidth}
-              height={40}
-              sizes={`${logoWidth}px`}
-              loading="eager"
-              className="h-10 w-auto"
-            />
-          ) : (
-            settings.organisationName
-          )}
-          <span className="sr-only"> home page</span>
-        </NextLink>
-        <NavMenu items={items} cta={cta} />
-      </div>
+    <header className="sticky top-0 z-30 border-b border-border bg-surface">
+      <NavMenu items={items} cta={cta} logo={home} />
     </header>
   )
 }

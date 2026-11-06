@@ -56,13 +56,13 @@ export default async function InsightPage({ params }: Props) {
             <p>
               <NextLink
                 href={pathFor('categories', category)!}
-                className="font-semibold text-brand hover:underline"
+                className="text-xs font-medium uppercase tracking-[0.14em] text-ink-muted hover:underline"
               >
                 {category.title}
               </NextLink>
             </p>
           )}
-          <h1 className="text-3xl font-semibold text-brand-strong sm:text-4xl">{insight.title}</h1>
+          <h1 className="text-4xl leading-[1.05] sm:text-5xl lg:text-6xl">{insight.title}</h1>
           {insight.excerpt && <p className="text-lg text-ink-muted">{insight.excerpt}</p>}
           <p className="text-sm text-ink-muted">
             {author && (
@@ -88,7 +88,7 @@ export default async function InsightPage({ params }: Props) {
         <RichText data={insight.body} />
         {solutions.length > 0 && (
           <aside className="flex flex-col gap-2 border-t border-border pt-6">
-            <h2 className="text-xl font-semibold">Related solutions</h2>
+            <h2 className="text-2xl">Related solutions</h2>
             <ul className="flex flex-wrap gap-4">
               {solutions.map((solution) => (
                 <li key={solution.id}>

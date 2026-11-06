@@ -2,7 +2,7 @@
 
 import NextLink from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useEffect, useId, useRef, useState } from 'react'
+import { type ReactNode, useEffect, useId, useRef, useState } from 'react'
 
 export type NavItem = {
   label: string
@@ -10,13 +10,24 @@ export type NavItem = {
   children: { label: string; href: string }[]
 }
 
-type Props = { items: NavItem[]; cta: { label: string; href: string } | null }
+type Props = {
+  items: NavItem[]
+  cta: { label: string; href: string } | null
+  /** The home link with the logo, rendered on the server. */
+  logo: ReactNode
+}
+
+const navLink =
+  'block py-2 text-[0.95rem] underline-offset-[6px] decoration-1 hover:underline md:py-1'
 
 /**
- * Primary navigation (brief §8.2): disclosure menus with `aria-expanded`, closed by Escape (focus
- * returns to the toggle) or a click elsewhere, and the same list as a drawer on small screens.
+ * Primary navigation (brief §8.2), laid out after apollo.com (decision "Apollo-style theme"): a
+ * top row with search, the centred logo and the call to action, and the menu on a row below.
+ * Menus are disclosures with `aria-expanded`, closed by Escape (focus returns to the toggle) or a
+ * click elsewhere; on desktop each opens as a floating panel, on small screens the same list is
+ * a drawer.
  */
-export function NavMenu({ items, cta }: Props) {
+export function NavMenu({ items, cta, logo }: Props) {
   const [open, setOpen] = useState<null | number>(null)
   const [drawer, setDrawer] = useState(false)
   const nav = useRef<HTMLElement>(null)
@@ -57,30 +68,52 @@ export function NavMenu({ items, cta }: Props) {
   }, [open, drawer])
 
   return (
-    <nav ref={nav} aria-label="Main" className="flex items-center">
-      <button
-        ref={drawerToggle}
-        type="button"
-        aria-expanded={drawer}
-        aria-controls={`${id}-menu`}
-        onClick={() => setDrawer((value) => !value)}
-        className="rounded-md border border-border px-3 py-2 font-semibold md:hidden"
-      >
-        Menu
-      </button>
+    <nav ref={nav} aria-label="Main" className="relative">
+      <div className="mx-auto grid max-w-(--container-page) grid-cols-[1fr_auto_1fr] items-center gap-4 px-6 py-3 md:py-5">
+        <div>
+          <NextLink
+            href="/search/"
+            className="hidden items-center gap-2 text-sm underline-offset-[6px] hover:underline md:inline-flex"
+          >
+            <svg aria-hidden="true" viewBox="0 0 20 20" className="size-4" fill="none">
+              <circle cx="8.5" cy="8.5" r="6" stroke="currentColor" strokeWidth="1.6" />
+              <path d="m13 13 5 5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+            </svg>
+            Search
+          </NextLink>
+        </div>
+        {logo}
+        <div className="flex items-center justify-end gap-3">
+          {cta && (
+            <NextLink
+              href={cta.href}
+              className="hidden rounded-full bg-brand px-5 py-2 text-sm font-medium text-on-brand transition-colors hover:bg-brand-strong md:inline-flex"
+            >
+              {cta.label}
+            </NextLink>
+          )}
+          <button
+            ref={drawerToggle}
+            type="button"
+            aria-expanded={drawer}
+            aria-controls={`${id}-menu`}
+            onClick={() => setDrawer((value) => !value)}
+            className="rounded-full border border-brand px-4 py-2 text-sm font-medium md:hidden"
+          >
+            Menu
+          </button>
+        </div>
+      </div>
       <ul
         id={`${id}-menu`}
-        className={`${drawer ? 'flex' : 'hidden'} absolute inset-x-0 top-16 z-20 flex-col gap-1 border-b border-border bg-surface p-6 md:static md:flex md:flex-row md:items-center md:gap-2 md:border-0 md:p-0`}
+        className={`${drawer ? 'flex' : 'hidden'} max-h-[calc(100dvh-4rem)] flex-col overflow-y-auto border-t border-border px-6 py-4 md:flex md:max-h-none md:flex-row md:justify-center md:gap-9 md:overflow-visible md:py-3`}
       >
         {items.map((item, index) => {
           const panel = `${id}-panel-${index}`
           if (item.children.length === 0) {
             return (
               <li key={item.label}>
-                <NextLink
-                  href={item.href!}
-                  className="block rounded-md px-3 py-2 font-semibold hover:bg-surface-muted"
-                >
+                <NextLink href={item.href!} className={navLink}>
                   {item.label}
                 </NextLink>
               </li>
@@ -88,7 +121,7 @@ export function NavMenu({ items, cta }: Props) {
           }
           const expanded = open === index
           return (
-            <li key={item.label} className="relative">
+            <li key={item.label}>
               <button
                 ref={(element) => {
                   toggles.current[index] = element
@@ -97,45 +130,64 @@ export function NavMenu({ items, cta }: Props) {
                 aria-expanded={expanded}
                 aria-controls={panel}
                 onClick={() => setOpen(expanded ? null : index)}
-                className="flex w-full items-center gap-1 rounded-md px-3 py-2 font-semibold hover:bg-surface-muted"
+                className={`${navLink} flex w-full items-center gap-1.5 ${expanded ? 'underline' : ''}`}
               >
                 {item.label}
-                <span aria-hidden="true">{expanded ? '▴' : '▾'}</span>
+                <svg
+                  aria-hidden="true"
+                  viewBox="0 0 12 12"
+                  className={`size-3 transition-transform ${expanded ? 'rotate-180' : ''}`}
+                  fill="none"
+                >
+                  <path d="m2 4 4 4 4-4" stroke="currentColor" strokeWidth="1.4" />
+                </svg>
               </button>
-              <ul
+              <div
                 id={panel}
                 hidden={!expanded}
-                className="flex flex-col gap-1 py-2 pl-4 md:absolute md:left-0 md:top-full md:z-20 md:min-w-64 md:rounded-md md:border md:border-border md:bg-surface md:p-2 md:shadow-lg"
+                className="pb-2 pl-4 md:absolute md:left-1/2 md:top-full md:z-30 md:mt-1 md:w-[min(72rem,calc(100vw-3rem))] md:-translate-x-1/2 md:rounded-[5px] md:bg-white md:p-6 md:pl-6 md:shadow-[2px_2px_12px_rgba(0,0,0,0.1)]"
               >
-                {item.href && (
-                  <li>
-                    <NextLink
-                      href={item.href}
-                      className="block rounded-md px-3 py-2 hover:bg-surface-muted"
-                    >
-                      {item.label} overview
-                    </NextLink>
-                  </li>
-                )}
-                {item.children.map((child) => (
-                  <li key={child.href}>
-                    <NextLink
-                      href={child.href}
-                      className="block rounded-md px-3 py-2 hover:bg-surface-muted"
-                    >
-                      {child.label}
-                    </NextLink>
-                  </li>
-                ))}
-              </ul>
+                <div className="md:grid md:grid-cols-[3fr_9fr] md:gap-8">
+                  <div className="hidden flex-col items-start gap-4 border-y border-border py-7 md:flex">
+                    <p className="font-serif text-[2rem] leading-tight">{item.label}</p>
+                    {item.href && (
+                      <NextLink
+                        href={item.href}
+                        className="inline-flex items-center gap-2 rounded-full border border-brand px-5 py-2 text-sm font-medium transition-colors hover:bg-brand hover:text-on-brand"
+                      >
+                        {item.label} overview
+                      </NextLink>
+                    )}
+                  </div>
+                  <ul className="flex flex-col md:grid md:grid-cols-3 md:content-start md:gap-x-6 md:border-y md:border-border md:py-6">
+                    {item.href && (
+                      <li className="md:hidden">
+                        <NextLink href={item.href} className={navLink}>
+                          {item.label} overview
+                        </NextLink>
+                      </li>
+                    )}
+                    {item.children.map((child) => (
+                      <li key={child.href}>
+                        <NextLink
+                          href={child.href}
+                          className="block py-2 underline-offset-[6px] hover:underline"
+                        >
+                          {child.label}
+                        </NextLink>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
             </li>
           )
         })}
         {cta && (
-          <li>
+          <li className="mt-3 md:hidden">
             <NextLink
               href={cta.href}
-              className="mt-2 inline-flex rounded-md bg-brand px-4 py-2 font-semibold text-on-brand hover:bg-brand-strong md:ml-2 md:mt-0"
+              className="inline-flex rounded-full bg-brand px-5 py-2 text-sm font-medium text-on-brand"
             >
               {cta.label}
             </NextLink>

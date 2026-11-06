@@ -8,8 +8,8 @@ export function OfficeCard({ office }: { office: Office }) {
       ? `https://www.google.com/maps/search/?api=1&query=${latitude},${longitude}`
       : null
   return (
-    <li className="flex flex-col gap-2 rounded-lg border border-border bg-surface p-6">
-      <h3 className="text-xl font-semibold">{office.name}</h3>
+    <li className="flex flex-col gap-2 border-t border-ink pt-6">
+      <h3 className="text-2xl leading-tight">{office.name}</h3>
       <address className="not-italic text-ink-muted">
         {office.addressLines?.map((line) => (
           <span key={line.id ?? line.line} className="block">

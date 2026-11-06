@@ -5,8 +5,8 @@ export function AwardItem({ award }: { award: Award }) {
   const fund = populated(award.fund)
   return (
     <li className="flex flex-col gap-1 border-b border-border py-4">
-      <p className="text-sm font-semibold text-brand">{award.year}</p>
-      <h3 className="text-lg font-semibold">{award.title}</h3>
+      <p className="text-xs font-medium uppercase tracking-[0.14em] text-ink-muted">{award.year}</p>
+      <h3 className="text-xl leading-snug">{award.title}</h3>
       <p className="text-ink-muted">
         {award.awardingBody}
         {fund && ` · ${fund.name}`}
