@@ -20,14 +20,14 @@ env:
 
 jobs:
   install:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
 
   lint:
     needs: install
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
@@ -38,7 +38,7 @@ jobs:
   # Ignored advisories are listed in package.json (pnpm.auditConfig); docs/decisions.md (M7) says why.
   audit:
     needs: install
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
@@ -46,7 +46,7 @@ jobs:
 
   typecheck:
     needs: install
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
@@ -67,7 +67,7 @@ jobs:
 
   test:
     needs: install
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     services:
       postgres:
         image: postgres:16
@@ -90,7 +90,7 @@ jobs:
 
   build-no-db:
     needs: install
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
@@ -117,7 +117,7 @@ jobs:
 
   e2e:
     needs: build-no-db
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     services:
       postgres:
         image: postgres:16
@@ -173,7 +173,7 @@ jobs:
 
   lighthouse:
     needs: build-no-db
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     services:
       postgres:
         image: postgres:16
@@ -215,7 +215,7 @@ jobs:
 
   a11y:
     needs: build-no-db
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     services:
       postgres:
         image: postgres:16
