@@ -14,7 +14,7 @@ export function PressItem({ mention }: { mention: PressMention }) {
           </>
         )}
       </p>
-      <h3 className="text-lg font-semibold">
+      <h3 className="text-xl leading-snug">
         <a href={mention.url} rel="noopener" className="hover:underline">
           {mention.headline}
           <span className="sr-only"> (on {mention.outlet})</span>

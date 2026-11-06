@@ -24,7 +24,14 @@ export function CMSLink({ link, className, children }: Props) {
   )
 }
 
+// Pill buttons after apollo.com (decision "Apollo-style theme"). The arrow is decoration: its
+// empty alternative text keeps screen readers from announcing it.
 export const buttonClass =
-  'inline-flex items-center rounded-md bg-brand px-5 py-2.5 font-semibold text-on-brand hover:bg-brand-strong'
+  "inline-flex items-center gap-2 rounded-full bg-brand px-6 py-3 font-medium text-on-brand transition-colors hover:bg-brand-strong after:content-['→'_/_''] after:transition-transform hover:after:translate-x-0.5"
 export const secondaryButtonClass =
-  'inline-flex items-center rounded-md border border-brand px-5 py-2.5 font-semibold text-brand hover:bg-surface-muted'
+  'inline-flex items-center gap-2 rounded-full border border-brand px-6 py-3 font-medium text-brand transition-colors hover:bg-brand hover:text-on-brand'
+/** For a dark band: the same buttons in cream. */
+export const lightButtonClass =
+  "inline-flex items-center gap-2 rounded-full bg-surface px-6 py-3 font-medium text-ink transition-colors hover:bg-surface-muted after:content-['→'_/_''] after:transition-transform hover:after:translate-x-0.5"
+export const lightSecondaryButtonClass =
+  'inline-flex items-center gap-2 rounded-full border border-surface px-6 py-3 font-medium text-surface transition-colors hover:bg-surface hover:text-ink'

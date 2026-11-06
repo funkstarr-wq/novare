@@ -17,7 +17,7 @@ export async function InsightCards({ block, draft }: SectionProps<InsightCardsBl
   if (docs.length === 0) return null
   return (
     <Section heading={block.heading}>
-      <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      <ul className="grid gap-x-6 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">
         {docs.map((insight) => (
           <InsightCard key={insight.id} insight={insight} />
         ))}

@@ -11,7 +11,7 @@ export function PersonCard({ person }: { person: Person }) {
         sizes="(min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw"
         className="aspect-square h-auto w-full rounded-lg object-cover"
       />
-      <h3 className="text-lg font-semibold">
+      <h3 className="text-xl leading-snug">
         <NextLink href={`/about/leadership/${person.slug}/`} className="hover:underline">
           {person.name}
         </NextLink>

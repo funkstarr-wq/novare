@@ -1,27 +1,37 @@
 @import 'tailwindcss';
 
 /*
- * Neutral placeholder theme (brief §8.1). Components may only use these tokens: the default
- * Tailwind palette is cleared so a stray `bg-blue-500` fails to style anything. When the brand
- * design is approved, swap the values here; class names and the data model stay unchanged.
+ * Theme after apollo.com's style, at the owner's request (decision "Apollo-style theme"): a warm
+ * cream page, near-black ink, warm greys, a serif for headings and a grotesque for everything
+ * else, pill buttons. Novare's green stays as the accent. Components may only use these tokens:
+ * the default Tailwind palette is cleared so a stray `bg-blue-500` fails to style anything. When
+ * the brand refresh's designs arrive, swap the values here; class names and the data model stay.
  */
 @theme {
   --color-*: initial;
   --color-white: #ffffff;
-  --color-brand: #1f4e79;
-  --color-brand-strong: #163a5c;
-  --color-on-brand: #ffffff;
-  --color-ink: #1a1d21;
-  --color-ink-muted: #4a5159;
-  --color-surface: #ffffff;
-  --color-surface-muted: #f4f5f7;
-  --color-border: #d7dbe0;
-  --color-focus: #1f4e79;
+  /* Buttons and links: near-black, with cream text on it (18:1). */
+  --color-brand: #1f1f1f;
+  --color-brand-strong: #010101;
+  --color-on-brand: #fef8f3;
+  /* Novare's green. 2.6:1 on cream, so decoration only on light backgrounds (rules, quote bars);
+     on the dark bands (`bg-ink`) it passes for text, 7.5:1 (WCAG 2.2 AA, brief §1). */
+  --color-accent: #5fb257;
+  --color-ink: #010101;
+  --color-ink-muted: #55585a;
+  --color-surface: #fef8f3;
+  --color-surface-muted: #efeae4;
+  --color-border: #d9d2cc;
+  --color-focus: #010101;
   --color-danger: #b42318;
   --color-success: #067647;
 
+  /* Self-hosted by next/font in the frontend layout: Hanken Grotesk for text and navigation,
+     EB Garamond for headings (the closest free fonts to Apollo's Graphik and Garamond). */
   --font-sans:
-    ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    var(--font-hanken), ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto,
+    'Helvetica Neue', Arial, sans-serif;
+  --font-serif: var(--font-garamond), Garamond, 'Times New Roman', serif;
 
   --text-sm: 0.875rem;
   --text-sm--line-height: 1.5;
@@ -37,13 +47,15 @@
   --text-3xl--line-height: 1.2;
   --text-4xl: 3rem;
   --text-4xl--line-height: 1.1;
+  --text-5xl: 3.75rem;
+  --text-5xl--line-height: 1.05;
 
   --radius-sm: 0.25rem;
   --radius-md: 0.5rem;
-  --radius-lg: 1rem;
+  --radius-lg: 0.625rem;
 
   --container-prose: 68ch;
-  --container-page: 80rem;
+  --container-page: 86rem;
 }
 
 @layer base {
@@ -53,9 +65,23 @@
     font-family: var(--font-sans);
   }
 
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-serif);
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+  }
+
   :focus-visible {
     outline: 3px solid var(--color-focus);
     outline-offset: 2px;
+  }
+
+  /* Dark bands (hero, call to action, footer): light text, and a focus ring that shows on them. */
+  .on-dark {
+    --color-focus: var(--color-surface);
   }
 }
 
@@ -66,21 +92,21 @@
     flex-direction: column;
     gap: 1rem;
     max-width: var(--container-prose);
+    font-size: var(--text-lg);
+    line-height: var(--text-lg--line-height);
   }
 
   .rich-text h2 {
     margin-top: 1rem;
-    font-size: var(--text-2xl);
-    line-height: var(--text-2xl--line-height);
-    font-weight: 600;
-    color: var(--color-brand-strong);
+    font-size: var(--text-3xl);
+    line-height: var(--text-3xl--line-height);
+    color: var(--color-ink);
   }
 
   .rich-text h3 {
     margin-top: 0.5rem;
-    font-size: var(--text-xl);
-    line-height: var(--text-xl--line-height);
-    font-weight: 600;
+    font-size: var(--text-2xl);
+    line-height: var(--text-2xl--line-height);
   }
 
   .rich-text h4 {

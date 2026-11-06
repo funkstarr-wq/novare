@@ -13,7 +13,7 @@ export type Crumb = { label: string; href: string }
 export function Breadcrumbs({ items }: { items: Crumb[] }) {
   const trail = [{ label: 'Home', href: '/' }, ...items]
   return (
-    <nav aria-label="Breadcrumb" className="mx-auto max-w-(--container-page) px-6 pt-6">
+    <nav aria-label="Breadcrumb" className="mx-auto w-full max-w-(--container-page) px-6 pt-6">
       <JsonLd data={[breadcrumbList(trail)]} />
       <ol className="flex flex-wrap gap-x-2 text-sm text-ink-muted">
         {trail.map((crumb, index) => {

@@ -75,7 +75,7 @@ export default async function SolutionPage({ params }: Props) {
             {solution.keyFacts.map((fact, index) => (
               <div key={fact.id ?? index} className="flex flex-col-reverse gap-1">
                 <dt className="text-ink-muted">{fact.label}</dt>
-                <dd className="text-2xl font-semibold text-brand-strong">{fact.value}</dd>
+                <dd className="font-serif text-4xl leading-none">{fact.value}</dd>
               </div>
             ))}
           </dl>
@@ -86,8 +86,8 @@ export default async function SolutionPage({ params }: Props) {
         <Section heading="Funds">
           <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {funds.map((fund) => (
-              <li key={fund.id} className="flex flex-col gap-2 rounded-lg border border-border p-6">
-                <h3 className="text-xl font-semibold">
+              <li key={fund.id} className="flex flex-col gap-2 border-t border-ink pt-6">
+                <h3 className="text-2xl leading-tight">
                   <NextLink href={pathFor('funds', fund)!} className="hover:underline">
                     {fund.name}
                   </NextLink>
@@ -102,11 +102,8 @@ export default async function SolutionPage({ params }: Props) {
         <Section heading="Projects">
           <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {projects.map((project) => (
-              <li
-                key={project.id}
-                className="flex flex-col gap-2 rounded-lg border border-border p-6"
-              >
-                <h3 className="text-xl font-semibold">
+              <li key={project.id} className="flex flex-col gap-2 border-t border-ink pt-6">
+                <h3 className="text-2xl leading-tight">
                   <NextLink href={pathFor('projects', project)!} className="hover:underline">
                     {project.name}
                   </NextLink>
