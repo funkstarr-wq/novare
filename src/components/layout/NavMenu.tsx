@@ -44,6 +44,17 @@ export function NavMenu({ items, cta, logo }: Props) {
     setDrawer(false)
   }
 
+  // The header is see-through cream over a page's photo hero and turns solid once the page
+  // scrolls, or while the phone menu is open (decision "Apollo-style theme").
+  useEffect(() => {
+    const header = nav.current?.closest('header')
+    if (!header) return
+    const update = () => header.toggleAttribute('data-solid', drawer || window.scrollY > 8)
+    update()
+    window.addEventListener('scroll', update, { passive: true })
+    return () => window.removeEventListener('scroll', update)
+  }, [drawer])
+
   useEffect(() => {
     if (open === null && !drawer) return
     const onKey = (event: KeyboardEvent) => {
@@ -69,7 +80,7 @@ export function NavMenu({ items, cta, logo }: Props) {
 
   return (
     <nav ref={nav} aria-label="Main" className="relative">
-      <div className="mx-auto grid max-w-(--container-page) grid-cols-[1fr_auto_1fr] items-center gap-4 px-6 py-3 md:py-5">
+      <div className="mx-auto grid h-16 max-w-(--container-page) grid-cols-[1fr_auto_1fr] items-center gap-4 px-6 md:h-20">
         <div>
           <NextLink
             href="/search/"
@@ -106,7 +117,7 @@ export function NavMenu({ items, cta, logo }: Props) {
       </div>
       <ul
         id={`${id}-menu`}
-        className={`${drawer ? 'flex' : 'hidden'} max-h-[calc(100dvh-4rem)] flex-col overflow-y-auto border-t border-border px-6 py-4 md:flex md:max-h-none md:flex-row md:justify-center md:gap-9 md:overflow-visible md:py-3`}
+        className={`${drawer ? 'flex' : 'hidden'} max-h-[calc(100dvh-4rem)] flex-col overflow-y-auto border-t border-border px-6 py-4 md:flex md:h-12 md:max-h-none md:flex-row md:items-center md:justify-center md:gap-9 md:overflow-visible md:py-0`}
       >
         {items.map((item, index) => {
           const panel = `${id}-panel-${index}`

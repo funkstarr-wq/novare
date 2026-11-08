@@ -62,7 +62,12 @@ export function Hero({ block, first }: SectionProps<HeroBlock>) {
   }
 
   return (
-    <section className="on-dark relative isolate flex min-h-[min(82vh,52rem)] items-end overflow-hidden bg-ink text-surface">
+    <section
+      className={`on-dark relative isolate flex min-h-[min(82vh,52rem)] items-end overflow-hidden bg-ink text-surface ${
+        // The opening hero runs up under the see-through header.
+        first ? '-mt-(--header-h)' : ''
+      }`}
+    >
       <Media
         media={block.image}
         sizes="100vw"

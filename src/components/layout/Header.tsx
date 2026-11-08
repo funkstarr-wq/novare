@@ -49,7 +49,7 @@ export async function Header({ draft }: { draft: boolean }) {
   )
 
   return (
-    <header className="sticky top-0 z-30 border-b border-border bg-surface">
+    <header className="sticky top-0 z-30 border-b border-border bg-surface/85 transition-colors duration-300 data-solid:bg-surface">
       <NavMenu items={items} cta={cta} logo={home} />
     </header>
   )

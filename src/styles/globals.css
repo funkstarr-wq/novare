@@ -79,6 +79,17 @@
     outline-offset: 2px;
   }
 
+  /* The header's height (src/components/layout/NavMenu.tsx: a 64/80 px top row, a 48 px menu row
+     from md, a 1 px border), so the opening hero can run up under it without a layout shift. */
+  :root {
+    --header-h: 65px;
+  }
+  @media (width >= 48rem) {
+    :root {
+      --header-h: 129px;
+    }
+  }
+
   /* Dark bands (hero, call to action, footer): light text, and a focus ring that shows on them. */
   .on-dark {
     --color-focus: var(--color-surface);
