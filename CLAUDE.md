@@ -81,7 +81,9 @@ Local Postgres: copy `.env.example` to `.env`; create the dev and test databases
   A new editable field goes in `src/ai/whitelist.ts`; its zod schema comes from the Payload
   config. Tests never call the API: integration tests pass a mock `ModelClient`, e2e runs the
   server with `AI_MOCK=1` (ignored on Railway). Without an enabled switch and a monthly budget
-  (AI settings or `AI_MONTHLY_BUDGET_USD`) every plan is refused.
+  (AI settings or `AI_MONTHLY_BUDGET_USD`) every plan is refused. The live AI bar
+  (`LiveAssistantBar`, entered through `/api/edit/`) uses the same endpoints from the site in
+  Draft Mode: Enter applies to the draft, Publish goes through the approval guard.
 - Security headers and the CSP live in `src/lib/securityHeaders.ts` (applied in `next.config.ts`).
   A new third-party script, frame or API host must be added there, or the browser blocks it.
   Analytics must render inside `<ConsentGate>`.

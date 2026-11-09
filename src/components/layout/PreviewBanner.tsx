@@ -1,6 +1,10 @@
+import { LiveAssistantBar } from './LiveAssistantBar'
 import { LivePreviewListener } from './LivePreviewListener'
 
-/** Shown only in draft mode (live preview): says so and offers a way out. */
+/**
+ * Shown only in draft mode (live preview, or "Edit the site live" from the admin): says so, offers
+ * a way out, and gives signed-in editors the live AI bar.
+ */
 export function PreviewBanner() {
   return (
     <>
@@ -17,6 +21,7 @@ export function PreviewBanner() {
         </button>
       </form>
       <LivePreviewListener serverURL={process.env.NEXT_PUBLIC_SERVER_URL || ''} />
+      <LiveAssistantBar />
     </>
   )
 }

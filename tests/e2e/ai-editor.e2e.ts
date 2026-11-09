@@ -100,6 +100,89 @@ test.describe('AI editor', () => {
   })
 })
 
+test.describe('live AI bar', () => {
+  test.skip(!seeded, 'SEED_ADMIN_EMAIL / SEED_ADMIN_PASSWORD not set (run `pnpm seed`)')
+  test.skip(!mocked, 'AI_MOCK=1 not set on the server')
+  test.use({ storageState: authFile('editor') })
+
+  const slug = `ai-bar-e2e-${Date.now()}`
+  let pageId: number
+
+  test.beforeAll(async ({ browser, baseURL }) => {
+    await asAdmin(browser, baseURL, async (request) => {
+      const headers = sameOrigin(baseURL)
+      await request.post('/api/globals/ai-settings/', {
+        headers,
+        data: { enabled: true, monthlyBudgetUSD: 5 },
+      })
+      const created = await request.post('/api/pages/', {
+        headers,
+        data: { title: 'AI bar e2e', slug, hero: { heading: 'Bar before' }, _status: 'published' },
+      })
+      expect(created.ok()).toBe(true)
+      pageId = ((await created.json()) as { doc: { id: number } }).doc.id
+    })
+  })
+
+  test.afterAll(async ({ browser, baseURL }) => {
+    await asAdmin(browser, baseURL, async (request) => {
+      const headers = sameOrigin(baseURL)
+      if (pageId) await request.delete(`/api/pages/${pageId}/`, { headers })
+      await request.post('/api/globals/ai-settings/', { headers, data: { enabled: false } })
+    })
+  })
+
+  test('changes the page by prompt on the site, undoes, publishes', async ({ page, browser }) => {
+    await page.goto(`/api/edit/?path=/${slug}/`)
+    await expect(page.locator('h1')).toHaveText('Bar before')
+    const prompt = page.getByLabel('Ask the AI to change this page')
+
+    await prompt.fill('Change the hero heading to "Bar after"')
+    await prompt.press('Enter')
+    await expect(page.locator('h1')).toHaveText('Bar after')
+    const status = page.getByRole('status').filter({ hasText: 'Saved as a draft' })
+    await expect(status).toBeVisible()
+
+    const results = await new AxeBuilder({ page })
+      .include('#live-ai-prompt')
+      .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
+      .analyze()
+    expect(
+      results.violations.filter((v) => v.impact === 'serious' || v.impact === 'critical'),
+    ).toEqual([])
+
+    await status.getByRole('button', { name: 'Undo' }).click()
+    await expect(page.locator('h1')).toHaveText('Bar before')
+
+    await prompt.fill('Change the hero heading to "Bar published"')
+    await prompt.press('Enter')
+    await expect(page.locator('h1')).toHaveText('Bar published')
+    await page.getByRole('button', { name: 'Publish' }).click()
+    await expect(page.getByText('Published. The change is now live.')).toBeVisible()
+
+    // A visitor (no session, no draft mode) sees the published heading.
+    const visitor = await browser.newContext({ storageState: { cookies: [], origins: [] } })
+    const visitorPage = await visitor.newPage()
+    await expect(async () => {
+      await visitorPage.goto(`/${slug}/`)
+      await expect(visitorPage.locator('h1')).toHaveText('Bar published', { timeout: 1000 })
+    }).toPass({ timeout: 15_000 })
+    await expect(visitorPage.getByLabel('Ask the AI to change this page')).toHaveCount(0)
+    await visitor.close()
+  })
+
+  test('sends a visitor without a session to the login', async ({ browser, baseURL }) => {
+    const visitor = await browser.newContext({
+      storageState: { cookies: [], origins: [] },
+      baseURL,
+    })
+    const visitorPage = await visitor.newPage()
+    await visitorPage.goto('/api/edit/?path=/')
+    await expect(visitorPage).toHaveURL(/\/admin\/login\/?\?redirect=/)
+    await visitor.close()
+  })
+})
+
 test.describe('AI assistant page @a11y', () => {
   test.skip(!seeded, 'SEED_ADMIN_EMAIL / SEED_ADMIN_PASSWORD not set (run `pnpm seed`)')
   test.use({ storageState: authFile('editor') })
