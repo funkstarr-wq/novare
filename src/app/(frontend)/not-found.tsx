@@ -16,7 +16,7 @@ const destinations = [
 export default function NotFound() {
   return (
     <div className="mx-auto flex w-full max-w-(--container-page) flex-col gap-6 px-6 py-16">
-      <h1 className="text-3xl font-semibold text-brand-strong sm:text-4xl">Page not found</h1>
+      <h1 className="text-4xl leading-[1.05] sm:text-5xl lg:text-6xl">Page not found</h1>
       <p className="max-w-(--container-prose) text-lg text-ink-muted">
         The page you were looking for may have moved. Search the site or start from one of these
         pages.

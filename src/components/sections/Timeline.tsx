@@ -10,8 +10,10 @@ export function Timeline({ block }: SectionProps<TimelineBlock>) {
       <ol className="flex flex-col border-l-2 border-border">
         {items.map((item, index) => (
           <li key={item.id ?? index} className="flex flex-col gap-1 py-4 pl-6">
-            <p className="text-sm font-semibold text-brand">{item.year}</p>
-            <h3 className="text-lg font-semibold">{item.title}</h3>
+            <p className="text-xs font-medium uppercase tracking-[0.14em] text-ink-muted">
+              {item.year}
+            </p>
+            <h3 className="text-xl leading-snug">{item.title}</h3>
             {item.text && <p className="text-ink-muted">{item.text}</p>}
           </li>
         ))}

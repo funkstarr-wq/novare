@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { EB_Garamond, Hanken_Grotesk } from 'next/font/google'
 import { draftMode } from 'next/headers'
 import React from 'react'
 
@@ -12,6 +13,24 @@ import { getSiteSettings } from '@/lib/queries'
 import { siteURL } from '@/lib/site'
 
 import '@/styles/globals.css'
+
+// The closest free fonts to Apollo's Graphik and Garamond (decision "Apollo-style theme").
+// next/font downloads them at build time and serves them from this site, so browsers never
+// contact Google (brief §8.2). Not preloaded: the largest paint is the hero photo, and on a slow
+// connection two preloaded fonts delay it past the 2.5 s budget; text shows in the size-matched
+// fallback until they arrive.
+const hanken = Hanken_Grotesk({
+  subsets: ['latin'],
+  display: 'swap',
+  preload: false,
+  variable: '--font-hanken',
+})
+const garamond = EB_Garamond({
+  subsets: ['latin'],
+  display: 'swap',
+  preload: false,
+  variable: '--font-garamond',
+})
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteURL()),
@@ -34,8 +53,8 @@ async function SiteJsonLd({ draft }: { draft: boolean }) {
 export default async function FrontendLayout({ children }: { children: React.ReactNode }) {
   const { isEnabled: draft } = await draftMode()
   return (
-    <html lang="en">
-      <body className="flex min-h-dvh flex-col antialiased">
+    <html lang="en" className={`${hanken.variable} ${garamond.variable}`}>
+      <body className="flex min-h-dvh flex-col bg-surface text-ink antialiased">
         <a
           href="#main-content"
           className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-surface focus:px-4 focus:py-2"

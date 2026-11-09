@@ -6,7 +6,7 @@ import { type ReactNode, useEffect, useState } from 'react'
 import { onReopenConsent, reopenConsent, saveConsent, useConsent } from '@/lib/consent'
 
 const button =
-  'inline-flex items-center rounded-md px-4 py-2 font-semibold focus-visible:outline-3 focus-visible:outline-focus'
+  'inline-flex items-center rounded-full px-5 py-2 font-medium focus-visible:outline-3 focus-visible:outline-focus'
 
 /** The consent banner: fixed to the bottom of the screen, so it never shifts the page. */
 export function CookieBannerClient({
@@ -44,7 +44,7 @@ export function CookieBannerClient({
         <div className="flex shrink-0 gap-3">
           <button
             type="button"
-            className={`${button} border border-border bg-surface text-ink hover:bg-surface-muted`}
+            className={`${button} border border-brand bg-surface text-ink hover:bg-surface-muted`}
             onClick={() => choose('declined')}
           >
             Decline

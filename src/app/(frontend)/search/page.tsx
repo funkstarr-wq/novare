@@ -49,8 +49,10 @@ export default async function SearchPage({ searchParams }: Props) {
             <ul className="flex flex-col divide-y divide-border border-y border-border">
               {results.map((result) => (
                 <li key={result.href} className="flex flex-col gap-1 py-4">
-                  <p className="text-sm font-semibold text-brand">{labels[result.collection]}</p>
-                  <h3 className="text-lg font-semibold">
+                  <p className="text-xs font-medium uppercase tracking-[0.14em] text-ink-muted">
+                    {labels[result.collection]}
+                  </p>
+                  <h3 className="text-xl leading-snug">
                     <NextLink href={result.href} className="hover:underline">
                       {result.title}
                     </NextLink>

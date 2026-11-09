@@ -21,7 +21,7 @@ async function JobsHub({ draft }: HubProps) {
             const office = populated(job.location)
             return (
               <li key={job.id} className="flex flex-col gap-1 py-4">
-                <h3 className="text-lg font-semibold">
+                <h3 className="text-xl leading-snug">
                   <NextLink href={pathFor('jobs', job)!} className="hover:underline">
                     {job.title}
                   </NextLink>

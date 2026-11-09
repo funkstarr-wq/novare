@@ -14,11 +14,11 @@ export function SearchForm({ defaultValue = '' }: { defaultValue?: string }) {
         defaultValue={defaultValue}
         maxLength={MAX_QUERY_LENGTH}
         placeholder="Search"
-        className="w-full rounded-md border border-border bg-surface px-3 py-2"
+        className="w-full rounded-full border border-ink-muted bg-white px-5 py-3"
       />
       <button
         type="submit"
-        className="rounded-md bg-brand px-5 py-2 font-semibold text-on-brand hover:bg-brand-strong"
+        className="rounded-full bg-brand px-6 py-3 font-medium text-on-brand transition-colors hover:bg-brand-strong"
       >
         Search
       </button>

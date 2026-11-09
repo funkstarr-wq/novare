@@ -26,15 +26,21 @@ export async function Footer({ draft }: { draft: boolean }) {
   const cookieSettings = Boolean(settings.cookieBanner?.enabled && settings.cookieBanner.message)
 
   return (
-    <footer className="mt-auto border-t border-border bg-surface-muted">
-      <div className="mx-auto grid max-w-(--container-page) gap-8 px-6 py-10 sm:grid-cols-2 lg:grid-cols-4">
+    <footer className="on-dark mt-auto bg-ink text-surface">
+      <div className="mx-auto max-w-(--container-page) px-6 pt-16">
+        <p className="font-serif text-4xl">{settings.organisationName}</p>
+      </div>
+      <div className="mx-auto grid max-w-(--container-page) gap-10 px-6 pb-14 pt-10 sm:grid-cols-2 lg:grid-cols-4">
         {footer.columns?.map((column, index) => (
           <nav key={column.id ?? index} aria-label={column.heading} className="flex flex-col gap-3">
-            <h2 className="font-semibold">{column.heading}</h2>
+            <h2 className="border-t border-ink-muted pt-4 text-xl">{column.heading}</h2>
             <ul className="flex flex-col gap-2">
               {column.links?.map((item, linkIndex) => (
                 <li key={item.id ?? linkIndex}>
-                  <CMSLink link={item.link} className="text-ink-muted hover:underline" />
+                  <CMSLink
+                    link={item.link}
+                    className="text-sm text-border hover:text-surface hover:underline"
+                  />
                 </li>
               ))}
             </ul>
@@ -42,8 +48,8 @@ export async function Footer({ draft }: { draft: boolean }) {
         ))}
         {offices.length > 0 && (
           <div className="flex flex-col gap-3">
-            <h2 className="font-semibold">Offices</h2>
-            <ul className="flex flex-col gap-2 text-ink-muted">
+            <h2 className="border-t border-ink-muted pt-4 text-xl">Offices</h2>
+            <ul className="flex flex-col gap-2 text-sm text-border">
               {offices.map((office) => (
                 <li key={office.id}>
                   {office.city}, {office.country}
@@ -64,8 +70,8 @@ export async function Footer({ draft }: { draft: boolean }) {
           </div>
         )}
       </div>
-      <div className="border-t border-border">
-        <div className="mx-auto flex max-w-(--container-page) flex-col gap-4 px-6 py-6 text-sm text-ink-muted md:flex-row md:items-center md:justify-between">
+      <div className="border-t border-ink-muted">
+        <div className="mx-auto flex max-w-(--container-page) flex-col gap-4 px-6 py-6 text-sm text-border md:flex-row md:items-center md:justify-between">
           <p>
             © {new Date().getFullYear()} {settings.organisationName}
           </p>
