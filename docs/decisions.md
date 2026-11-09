@@ -4,6 +4,38 @@ A running log of choices made during the build, newest milestone first. Deviatio
 [`BUILD_BRIEF.md`](BUILD_BRIEF.md) are marked **Deviation** and flagged in the milestone's PR.
 Open items that need an answer from Novare or the agency are marked **Needs decision**.
 
+## Live AI bar (2026-11-09)
+
+The owner asked to edit the site by prompt on the page itself: type "change the hero banner to …",
+press Enter, and see the change, without working in the admin. It reuses the M5 assistant (brief
+§10): the same plan, apply-to-draft, rollback and guards, and the same audit trail.
+
+1. **Way in:** "Edit the site live" in the admin navigation, or `/api/edit/?path=/…`.
+   - The route needs a staff session that has entered its 2FA code; without one it sends the
+     browser to the admin login, which returns there.
+   - It turns on Draft Mode and opens the page. The bar appears in Draft Mode only, and only
+     once `/api/ai/locate/` confirms the verified staff session.
+2. **"This page."** `/api/ai/locate/` maps the URL back to its document (`src/ai/locate.ts`, the
+   inverse of `pathFor`). The bar passes it to the assistant as context, as the admin's document
+   panel does. A URL with no document (a listing page) is planned without context.
+3. **Enter applies to the draft straight away. Deviation (brief §10.3):** in the admin, a person
+   reviews the proposed diff before applying. Here the page itself is the review:
+   - the draft is applied as the signed-in editor, and the page refreshes to show it;
+   - the bar says what changed and offers **Undo** (the M5 rollback) and **Publish**.
+
+   Nothing becomes public on Enter. Chosen by the owner (option a).
+
+4. **Publish** (`/api/ai/publish/`) publishes the latest draft as the signed-in user, with access
+   rules and the approval guard. Regulated content, and changes the claims check flagged, need
+   compliance. The bar then offers "Submit for review" (the M2 workflow).
+5. **Limits** are the M5 ones:
+   - the editable-fields whitelist;
+   - the monthly budget and the AI settings switch;
+   - 30 plans per person per hour.
+
+   On staging and production it needs `ANTHROPIC_API_KEY` and a budget, as the admin assistant
+   does.
+
 ## Apollo-style theme (2026-11-06)
 
 The owner asked for the site to follow apollo.com's style: its navigation, its fonts (Google Fonts

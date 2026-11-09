@@ -3,9 +3,11 @@ import { z } from 'zod'
 
 import { applyChangeset, discardChangeset, rollbackChangeset } from '@/ai/apply'
 import { AiRefusal, aiStatus, checkCanPlan, verifiedStaff } from '@/ai/guards'
+import { documentForPath } from '@/ai/locate'
 import { defaultClient } from '@/ai/model'
 import type { OperationRecord } from '@/ai/operations'
 import { planChangeset } from '@/ai/plan'
+import { isAiCollection } from '@/ai/whitelist'
 import { previewURL } from '@/lib/preview'
 import type { AiChangeset } from '@/payload-types'
 
@@ -50,6 +52,10 @@ const PlanBody = z.object({
     .object({ collection: z.string().max(64), id: z.union([z.number(), z.string().max(64)]) })
     .optional(),
   continueFrom: z.number().int().positive().optional(),
+})
+const PublishBody = z.object({
+  collection: z.string().max(64),
+  id: z.union([z.number(), z.string().max(64)]),
 })
 const ChangesetBody = z.object({
   changesetId: z.number().int().positive(),
@@ -175,6 +181,55 @@ export const aiEndpoints: Endpoint[] = [
       await verifiedStaff(req)
       const input = await body(req, ChangesetBody)
       return { changeset: changesetView(await discardChangeset(req, input.changesetId)) }
+    }),
+  },
+  {
+    // The live AI bar (src/components/layout/LiveAssistantBar.tsx): which document a page shows.
+    path: '/ai/locate',
+    method: 'get',
+    handler: handle(async (req) => {
+      await verifiedStaff(req)
+      const path = new URL(req.url ?? '', 'http://site.invalid').searchParams.get('path') ?? ''
+      if (!path.startsWith('/') || path.startsWith('//')) throw new AiRefusal('Invalid path.', 400)
+      return { document: await documentForPath(req.payload, path) }
+    }),
+  },
+  {
+    // Publishes a document's latest draft as the signed-in user, from the live AI bar. Access
+    // rules and the approval guard apply as in the admin: regulated content needs compliance.
+    path: '/ai/publish',
+    method: 'post',
+    handler: handle(async (req) => {
+      await verifiedStaff(req)
+      const input = await body(req, PublishBody)
+      if (!isAiCollection(input.collection)) throw new AiRefusal('Not allowed.', 403)
+      const draft = await req.payload.findByID({
+        collection: input.collection,
+        id: input.id,
+        draft: true,
+        depth: 0,
+        overrideAccess: false,
+        req,
+      })
+      try {
+        await req.payload.update({
+          collection: input.collection,
+          id: input.id,
+          data: { ...draft, _status: 'published' } as never,
+          overrideAccess: false,
+          req,
+        })
+      } catch (error) {
+        const status = (error as { status?: number }).status
+        if (status === 403) {
+          return Response.json(
+            { error: (error as Error).message, needsReview: true },
+            { status: 403 },
+          )
+        }
+        throw error
+      }
+      return { published: true }
     }),
   },
   {
